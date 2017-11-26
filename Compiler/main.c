@@ -5,20 +5,18 @@
 
 #define KEYNUM 14
 
-const char *keyword[]={"const","int","char","void","main",
-                       "if","else","while","switch","case",
+const char *keyword[]={"const","int","char","void","main","if","else","while","switch","case",
                        "default","scanf","printf","return"};
-const char *mnemonic[]={"CONST","INT","CHAR","VOID","MAIN",
-                        "IF","ELSE","WHILE","SWITCH","CASE",
+const char *mnemonic[]={"CONST","INT","CHAR","VOID","MAIN","IF","ELSE","WHILE","SWITCH","CASE",
                         "DEFAULT","SCANF","PRINTF","RETURN"};
 
-const enum symbol {add, sub, mult, divi, les, loe, mor, moe, noteq, equal,
+/*const enum symbol {add, sub, mult, divi, les, loe, mor, moe, noteq, equal,
                    comma, colon, semicolon, sinquo, douquo, equmark,
                    lparent, rparent, lbracket, rbracket, lbrace, rbrace,
                    //identsym, inttype, chartype, strtype, realtype,
                    constsym, intsym, charsym, voidsym, mainsym, ifsym, elsesym, whilesym,
                    switchsym, casesym, defaultsym, scanfsym, printfsym, returnsym};
-
+*/
 int in; //整数
 float fl; //实数
 char ch; //字符
@@ -29,42 +27,21 @@ int No=1;
 void nextsym(FILE *IN, FILE *OUT)
 {
     int t=0, i;
-    memset(token, 0, sizeof(token));
+    memset(token, 0, sizeof(token)); //清空数组！
     ch=fgetc(IN);
     if(isdigit(ch))
     {
-        int type=0;//0-int,1-float
         token[t]=ch;
         ch=fgetc(IN);
         //printf("%c\n",ch);
-        while(isdigit(ch)|ch=='.')
+        while(isdigit(ch))
         {
-            if(isdigit(ch))
-            {
-                token[++t]=ch;
-                ch=fgetc(IN);
-                continue;
-            }
-            else if (ch=='.')
-            {
-                type=1;
-                token[++t]=ch;
-                ch=fgetc(IN);
-                while (isdigit(ch))
-                {
-                    token[++t]=ch;
-                    ch=fgetc(IN);
-                    continue;
-                }
-                break;
-            }
+            token[++t]=ch;
+            ch=fgetc(IN);
         }
         if(!feof(IN)) //否则文件最后一个字符为数字时会进入无限循环
             fseek(IN,-1L,SEEK_CUR);
-        if(type==0)
-            fprintf(OUT,"%d\tINT\t",No++);
-        else
-            fprintf(OUT,"%d\tFLOAT\t",No++);
+        fprintf(OUT,"%d\tINT\t",No++);
         for(i=0;i<=t;i++)
             fprintf(OUT,"%c",token[i]);
         fprintf(OUT,"\n");
@@ -72,11 +49,11 @@ void nextsym(FILE *IN, FILE *OUT)
     else if (isalpha(ch))
     {
         int type=-1;
-        token[t]=ch;
+        token[t]=tolower(ch); //统一存成小写
         ch=fgetc(IN);
         while(isdigit(ch)|isalpha(ch))
         {
-            token[++t]=ch;
+            token[++t]=tolower(ch);
             ch=fgetc(IN);
             continue;
         }
@@ -138,7 +115,6 @@ void nextsym(FILE *IN, FILE *OUT)
                 fprintf(OUT,"\n");
             }
         }
-
     }
     else
     {
@@ -191,15 +167,16 @@ int main()
     char buffer[100];
     int sym;
     char temp;
-    IN = fopen("C:\\Users\\Administrator\\Desktop\\in.txt","r");
-    OUT = fopen("C:\\Users\\Administrator\\Desktop\\out.txt","w");
+    IN = fopen("15061091_test.txt","r");
+    OUT = fopen("15061091_result.txt","w");
     if(IN == NULL){
-            printf("NO SUCH FILE!\n");
+        printf("NO SUCH FILE!\n");
     }
-
-    while(!feof(IN))
-    {
-        nextsym(IN,OUT);
+    else{
+        while(!feof(IN))
+        {
+            nextsym(IN,OUT);
+        }
     }
     return 0;
 }
