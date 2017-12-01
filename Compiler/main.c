@@ -31,21 +31,22 @@ int constdef();//常量定义
 int vardec();//常量说明
 int vardef(); //变量定义
 int differ();
-int frufuncdef(); //有返回值函数定义
+int retfuncdef(); //有返回值函数定义
 int voidfuncdef(); //无返回值函数定义
 int parameters(); //参数
 int mainfunc(); //主函数
 int expression(); //表达式
 int item(); //项
 int factor(); //因子
-int statement(); //语句
+int statements(); //复合语句
+int statement();//语句
 int assignstatement(); //赋值语句
 int ifstatement(); //情况语句
 int whilestatement(); //循环语句
 int switchstatement(); //情况语句
 int casestatement(); //情况子语句
 int defaultstatement(); //缺省
-int frufuncuse(); //有返回值函数调用语句
+int retfuncuse(); //有返回值函数调用语句
 int voidfuncuse(); //无返回值函数调用语句
 int valuepara(); //值参数表
 int readstatement(); //读语句
@@ -55,7 +56,7 @@ int returnstatement(); //返回语句
 /*＜常量说明＞ ::=  const＜常量定义＞;{ const＜常量定义＞;}*/
 int constdec(FILE *IN)
 {
-    printf("Constant declaration begin:\n");
+    printf("Constdec begin:\n");
     while(1)
     {
         constdef(IN);
@@ -69,7 +70,7 @@ int constdec(FILE *IN)
                 continue;
             else
             {
-                printf("Constant declaration end\n");
+                printf("Constdec end\n");
                 return;
             }
         }
@@ -81,7 +82,7 @@ int constdec(FILE *IN)
                     | char＜标识符＞＝＜字符＞{,＜标识符＞＝＜字符＞}*/
 int constdef(FILE *IN)
 {
-    printf("\tConstant definition begin:\n");
+    printf("\tConstdef begin:\n");
     sym=nextsym(IN);
     if(sym==intsym){
         while(1)
@@ -99,9 +100,9 @@ int constdef(FILE *IN)
                         sym=nextsym(IN);
                         if(sym==comma)//逗号
                             continue;
-                        else
+                        else//分号
                         {
-                            printf("\tConstant definition end\n");
+                           // printf("\tConstdef end\n");
                             return;
                         }
                     }
@@ -128,12 +129,12 @@ int constdef(FILE *IN)
                             sym=nextsym(IN);
                             if(sym==sinquo)//单引号
                             {
-                                sym==nextsym(IN);
+                                sym=nextsym(IN);
                                 if(sym==comma)//逗号
                                     continue;
-                                else
+                                else//分号
                                 {
-                                    printf("\tConstant definition end\n");
+                                    //printf("\tConstdef end\n");
                                     return;
                                 }
                             }
@@ -149,7 +150,7 @@ int constdef(FILE *IN)
 int vardec(FILE *IN)
 {
     if(vardecbegflag==0){
-        printf("Variable declaration begin:\n");
+        printf("Vardec begin:\n");
         vardecbegflag=1;
     }
     while(1)
@@ -164,9 +165,10 @@ int vardec(FILE *IN)
             else
             {
                 if(vardecendflag==0){
-                    printf("Variable declaration end\n");
+                    printf("Vardec end\n");
                     vardecendflag=1;
                 }
+                //printf("1 %d\n",sym);
                 return;
             }
         }
@@ -177,13 +179,13 @@ int vardec(FILE *IN)
 /*＜变量定义＞  ::= ＜类型标识符＞(＜标识符＞|＜标识符＞‘[’＜无符号整数＞‘]’){,(＜标识符＞|＜标识符＞‘[’＜无符号整数＞‘]’ )}  */
 int vardef(FILE *IN)
 {
-    printf("\tVariable definition begin:\n");
+    printf("\tVardef begin:\n");
     while(1)
     {
         //sym是左方括号或者逗号或者分号
         if(sym==semicolon)
         {
-            printf("\tVariable definition end\n");
+            //printf("\tVardef end\n");
             return;
         }
         sym=nextsym(IN);
@@ -201,9 +203,9 @@ int vardef(FILE *IN)
                         sym=nextsym(IN);
                         if(sym==comma)//逗号
                             continue;
-                        else
+                        else//分号
                         {
-                            printf("\tVariable definition end\n");
+                            //printf("\tVardef end\n");
                             return;
                         }
                     }
@@ -213,7 +215,7 @@ int vardef(FILE *IN)
                 continue;
             else
             {
-                printf("\tVariable definition end\n");
+               // printf("\tVardef end\n");
                 return;
             }
         }
@@ -227,7 +229,7 @@ int vardef(FILE *IN)
                     continue;
                 else//分号
                 {
-                    printf("\tVariable definition end\n");
+                    //printf("\tVardef end\n");
                     return;
                 }
             }
@@ -249,35 +251,42 @@ int differ(FILE *IN)
                 vardec(IN);
             }
             else{
+                //printf("test\n");
+                //printf("%d\n",sym);
                 if(vardecendflag==0){
-                    printf("Variable declaration end\n");
+                    printf("Vardec end\n");
                     vardecendflag=1;
                 }
                 if (sym==lbrace||sym==lparent)//左花括号或左括号
                 {
-                    frufuncdef(IN);
+                    retfuncdef(IN);
                 }
             }
         }
         else if(sym==intsym||sym==charsym)
             continue;
-        else if(sym==voidsym)
+        if(sym==voidsym||sym==rbrace)
+            return;
+        if(sym==ifsym||sym==whilesym||sym==lbrace||sym==scanfsym
+           ||sym==printfsym||sym==switchsym||sym==returnsym
+           ||sym==identsym)
             return;
     }
 }
+
 /*＜有返回值函数定义＞  ::=  ＜声明头部＞‘(’＜参数＞‘)’ ‘{’＜复合语句＞‘}’
                             |＜声明头部＞‘{’＜复合语句＞‘}’ */
-int frufuncdef(FILE *IN)
+int retfuncdef(FILE *IN)
 {
     while(1){
-        printf("Fruitful function definition begin:\n");
+        printf("Return funcdef begin:\n");
         if(sym==lbrace)//左花括号
         {
-            statement(IN);//语句
             sym=nextsym(IN);
+            statements(IN);//复合语句
             if(sym==rbrace)//右花括号
             {
-                printf("Fruitful function definition end:\n");
+                printf("Return fundef end:\n");
                 return;
             }
         }
@@ -290,11 +299,11 @@ int frufuncdef(FILE *IN)
                 sym=nextsym(IN);
                 if(sym==lbrace)//左花括号
                 {
-                    statement(IN);//语句
                     sym=nextsym(IN);
+                    statements(IN);//复合语句
                     if(sym==rbrace)//右花括号
                     {
-                        printf("Fruitful function definition end:\n");
+                        printf("Return fundef end:\n");
                         return;
                     }
                 }
@@ -302,12 +311,13 @@ int frufuncdef(FILE *IN)
         }
     }
 }
+
 /*＜无返回值函数定义＞  ::= void＜标识符＞(’＜参数＞‘)’‘{’＜复合语句＞‘}’
                           | void＜标识符＞{’＜复合语句＞‘}’*/
 int voidfuncdef(FILE *IN)
 {
     //sym是标识符
-    printf("Void function definition begin:\n");
+    printf("Void fundef begin:\n");
     while(1)
     {
         if(sym==identsym||sym==chartype)//标识符
@@ -322,11 +332,11 @@ int voidfuncdef(FILE *IN)
                     sym=nextsym(IN);
                     if(sym==lbrace)//左花括号
                     {
-                        statement(IN);//语句
                         sym=nextsym(IN);
+                        statements(IN);//语句
                         if(sym==rbrace)//右花括号
                         {
-                            printf("Void function definition end:\n");
+                            printf("Void fundef end:\n");
                             return;
                         }
                     }
@@ -334,11 +344,11 @@ int voidfuncdef(FILE *IN)
             }
             else if(sym==lbrace)//左花括号
             {
-                statement(IN);//语句
                 sym=nextsym(IN);
+                statements(IN);//复合语句
                 if(sym==rbrace)//右花括号
                 {
-                    printf("Void function definition end:\n");
+                    printf("Void fundef end:\n");
                     return;
                 }
             }
@@ -346,13 +356,154 @@ int voidfuncdef(FILE *IN)
     }
 }
 
+/*＜主函数＞  ::= void main‘(’‘)’‘{’＜复合语句＞‘}’ */
+int mainfunc(FILE *IN)
+{
+    //sym现在是main
+    printf("Mainfunc begin:\n");
+    sym=nextsym(IN);
+    if(sym==lparent)//左括号
+    {
+        sym=nextsym(IN);
+        if(sym==rparent)//右括号
+        {
+            sym=nextsym(IN);
+            if(sym==lbrace)//左花括号
+            {
+                sym=nextsym(IN);
+                statements(IN);//复合语句
+                if(sym==rbrace)//右花括号
+                {
+                    printf("Mainfunc end\n");
+                    return;
+                }
+            }
+        }
+    }
+}
+
+/*＜复合语句＞   ::=  ［＜常量说明＞］［＜变量说明＞］｛＜语句＞｝*/
+int statements(FILE *IN)
+{
+    printf("Statements begin:\n");
+    //while(sym!=rbrace)//不是右花括号
+    //{
+    vardecbegflag=0;
+    vardecendflag=0;
+    //常量声明
+    if(sym==constsym){
+        constdec(IN);
+    }
+    //变量声明
+    //printf("%d\n",sym);
+    if(sym==intsym||sym==charsym)//类型标识符
+        differ(IN);
+    //}
+    //语句
+    statement(IN);
+
+    printf("Statements end:\n");
+}
+
+/*＜语句＞ ::= ＜条件语句＞｜＜循环语句＞| ‘{’｛＜语句＞｝‘}’
+            ｜＜有返回值函数调用语句＞; |＜无返回值函数调用语句＞;
+            ｜＜赋值语句＞;｜＜读语句＞;｜＜写语句＞;｜＜空＞;
+            |＜情况语句＞｜＜返回语句＞*/
 int statement(FILE *IN)
 {
-    printf("\tstatement\n");
+    switch(sym)
+    {
+        case ifsym:
+            ifstatement(IN);
+            return;
+        case whilesym:
+            whilestatement(IN);
+            return;
+        case switchsym:
+            switchstatement(IN);
+            return;
+        case scanfsym:
+            readstatement(IN);
+            return;
+        case printfsym:
+            writestatement(IN);
+            return;
+        case returnsym:
+            returnstatement(IN);
+            return;
+        case lbrace:
+            return;
+        case identsym:
+            sym=nextsym(IN);
+            if(sym==lparent)//左括号，为函数调用语句
+            {
+                voidfuncuse(IN);
+                return;
+            }
+            else if(sym==equmark)//等号，为赋值语句
+            {
+                assignstatement(IN);
+                return;
+            }
+            else
+                printf("error\n");
+        default:
+            //printf("default %d\n",sym);
+            return;
+    }
+
 }
+
+int assignstatement(FILE *IN) //赋值语句
+{
+    printf("\tAssign statement\n");
+    return;
+}
+int ifstatement(FILE *IN) //情况语句
+{
+    printf("\tIf statement\n");
+}
+int whilestatement(FILE *IN) //循环语句
+{
+    printf("\tWhile statement\n");
+}
+int switchstatement(FILE *IN) //情况语句
+{
+    printf("\tSwitch statement\n");
+}
+int casestatement(FILE *IN) //情况子语句
+{
+    printf("\tCase statement\n");
+}
+int defaultstatement(FILE *IN) //缺省
+{
+    printf("\tDefault statement\n");
+}
+int retfuncuse(FILE *IN) //有返回值函数调用语句
+{
+    printf("\tReturn funcuse\n");
+}
+int voidfuncuse(FILE *IN) //无返回值函数调用语句
+{
+    printf("\tVoid funcuse\n");
+}
+int readstatement(FILE *IN) //读语句
+{
+    printf("\tRead statement\n");
+}
+int writestatement(FILE *IN) //写语句
+{
+    printf("\tWrite statement\n");
+}
+int returnstatement(FILE *IN) //返回语句
+{
+    printf("\tReturn statement\n");
+}
+
+
 int parameters(FILE *IN)
 {
-    printf("\tparameters\n");
+    printf("Parameters\n");
 }
 int nextsym(FILE *IN)
 {
@@ -576,9 +727,10 @@ int main()
             if(sym==voidsym)
             {
                 sym=nextsym(IN);
-                if(sym!=mainsym)
+                if(sym!=mainsym)//无返回值函数
                     voidfuncdef(IN);
-                else;
+                else //主函数
+                    mainfunc(IN);
             }
         }
     }
