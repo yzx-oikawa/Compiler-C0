@@ -8,6 +8,7 @@
 const char *keyword[]={"const","int","char","void","main","if","else","while","switch","case",
                        "default","scanf","printf","return"};
 const char *mnemonic[]={"CONST","INT","CHAR","VOID","MAIN","IF","ELSE","WHILE","SWITCH","CASE",
+
                         "DEFAULT","SCANF","PRINTF","RETURN"};
 
 const enum symbol {constsym, intsym, charsym, voidsym, mainsym, ifsym, elsesym, whilesym,//0-7
@@ -15,7 +16,7 @@ const enum symbol {constsym, intsym, charsym, voidsym, mainsym, ifsym, elsesym, 
                    add, sub, mult, divi, les, loe, mor, moe, noteq, equal,               //14-23
                    comma, colon, semicolon, sinquo, douquo, equmark,                     //24-29
                    lparent, rparent, lbracket, rbracket, lbrace, rbrace,                 //30-35
-                   identsym, inttype, chartype, strtype, blank};                         //36-39
+                   identsym, inttype, chartype, strtype, blank};                         //36-40
 
 int No=1;
 int sym;
@@ -41,7 +42,8 @@ int factor(); //因子
 int statements(); //复合语句
 int statement();//语句
 int assignstatement(); //赋值语句
-int ifstatement(); //情况语句
+int ifstatement(); //条件语句
+int condition();//条件
 int whilestatement(); //循环语句
 int switchstatement(); //情况语句
 int casestatement(); //情况子语句
@@ -269,7 +271,7 @@ int differ(FILE *IN)
             return;
         if(sym==ifsym||sym==whilesym||sym==lbrace||sym==scanfsym
            ||sym==printfsym||sym==switchsym||sym==returnsym
-           ||sym==identsym)
+           ||sym==identsym||sym==chartype)
             return;
     }
 }
@@ -368,10 +370,13 @@ int mainfunc(FILE *IN)
         if(sym==rparent)//右括号
         {
             sym=nextsym(IN);
+            //printf("%d\n",sym);
             if(sym==lbrace)//左花括号
             {
                 sym=nextsym(IN);
                 statements(IN);//复合语句
+                //printf("%d\n",sym);
+                //sym=nextsym(IN);
                 if(sym==rbrace)//右花括号
                 {
                     printf("Mainfunc end\n");
@@ -401,8 +406,10 @@ int statements(FILE *IN)
     //}
     //语句
     statement(IN);
-
     printf("Statements end:\n");
+    if(sym==rbrace) return;
+    else printf("mainerror\n");
+    return;
 }
 
 /*＜语句＞ ::= ＜条件语句＞｜＜循环语句＞| ‘{’｛＜语句＞｝‘}’
@@ -411,65 +418,162 @@ int statements(FILE *IN)
             |＜情况语句＞｜＜返回语句＞*/
 int statement(FILE *IN)
 {
-    switch(sym)
+    //printf("%d\n",sym);
+    while(!feof(IN)){
+        switch(sym)
+        {
+            case rbrace:
+                //sym=nextsym(IN);
+                return;
+            case semicolon:
+                sym=nextsym(IN);
+                if(sym==rbrace)//花括号
+                    return;
+                else continue;
+            case ifsym:
+                ifstatement(IN);
+                continue;
+            case elsesym:
+                return;
+            case whilesym:
+                whilestatement(IN);
+                continue;
+            case switchsym:
+                switchstatement(IN);
+                continue;
+            case scanfsym:
+                readstatement(IN);
+                continue;
+            case printfsym:
+                writestatement(IN);
+                continue;
+            case returnsym:
+                returnstatement(IN);
+                continue;
+            case lbrace:
+                sym=nextsym(IN);
+                statement(IN);
+                if(sym==rbrace){
+                    sym=nextsym(IN);
+                    continue;
+                }
+                else printf("errorlbarce\n");break;
+            case identsym:
+            case chartype:
+                sym=nextsym(IN);
+                if(sym==lparent)//左括号，为函数调用语句
+                {
+                    voidfuncuse(IN);
+                    continue;
+                }
+                else if(sym==equmark||sym==lbracket)//等号或左方括号，为赋值语句
+                {
+                    //printf("%d\n",sym);
+                    assignstatement(IN);
+                    continue;
+                }
+                else
+                    printf("statementerror\n");
+                    continue;
+            default:
+                //printf("default %d\n",sym);
+                continue;
+        }
+    }
+
+}
+/*＜赋值语句＞ ::= ＜标识符＞＝＜表达式＞|＜标识符＞‘[’＜表达式＞‘]’=＜表达式＞*/
+int assignstatement(FILE *IN) //赋值语句
+{
+    printf("Assign statement\n");
+    //此时sym是等号或左方括号
+    if(sym==lbracket)//左方括号，数组赋值
     {
-        case ifsym:
-            ifstatement(IN);
-            return;
-        case whilesym:
-            whilestatement(IN);
-            return;
-        case switchsym:
-            switchstatement(IN);
-            return;
-        case scanfsym:
-            readstatement(IN);
-            return;
-        case printfsym:
-            writestatement(IN);
-            return;
-        case returnsym:
-            returnstatement(IN);
-            return;
-        case lbrace:
-            return;
-        case identsym:
+        expression(IN);//表达式
+        sym=nextsym(IN);
+        {
+            if(sym==rbracket)//右方括号
+            {
+                sym=nextsym(IN);
+                if(sym==equmark)//等号
+                {
+                    expression(IN);//表达式
+                    sym=nextsym(IN);
+                    sym=nextsym(IN);//分号
+                    //printf("%d\n",sym);
+                    return;
+                }
+            }
+        }
+    }
+    else if(sym==equmark)//等号
+    {
+        expression(IN);//表达式
+        sym=nextsym(IN);
+        sym=nextsym(IN);//分号
+        //printf("%d\n",sym);
+        return;
+    }
+
+    return;
+}
+
+/*＜条件语句＞::= if ‘(’＜条件＞‘)’＜语句＞else＜语句＞*/
+int ifstatement(FILE *IN) //情况语句
+{
+    printf("If statement:\n");
+    //此时sym是if
+    sym=nextsym(IN);
+    if(sym==lparent)//左括号
+    {
+        condition(IN);//条件
+        sym=nextsym(IN);
+        if(sym==rparent)//右括号
+        {
             sym=nextsym(IN);
-            if(sym==lparent)//左括号，为函数调用语句
+            statement(IN);//语句
+            if(sym==rbrace)
+                sym=nextsym(IN);
+            if(sym==elsesym)//else
             {
-                voidfuncuse(IN);
+                printf("Else statement:\n");
+                sym=nextsym(IN);
+                statement(IN);//语句
+                if(sym==rbrace)
+                //    sym=nextsym(IN);
                 return;
+                else
+                {
+                    printf("iferror\n");
+                }
             }
-            else if(sym==equmark)//等号，为赋值语句
-            {
-                assignstatement(IN);
-                return;
-            }
-            else
-                printf("error\n");
-        default:
-            //printf("default %d\n",sym);
-            return;
+        }
     }
 
 }
 
-int assignstatement(FILE *IN) //赋值语句
+/*＜条件＞ ::=  ＜表达式＞＜关系运算符＞＜表达式＞｜＜表达式＞*/
+int condition(FILE *IN)
 {
-    printf("\tAssign statement\n");
+    printf("\tcondition\n");
+    //此时sym是左括号
+    sym=nextsym(IN);
+    expression(IN);//表达式
+    sym=nextsym(IN);
+    if(sym>=les&&sym<=equal)//关系运算符
+    {
+        sym=nextsym(IN);
+        expression(IN);
+    }
     return;
-}
-int ifstatement(FILE *IN) //情况语句
-{
-    printf("\tIf statement\n");
 }
 int whilestatement(FILE *IN) //循环语句
 {
-    printf("\tWhile statement\n");
+    printf("While statement\n");
 }
 int switchstatement(FILE *IN) //情况语句
 {
-    printf("\tSwitch statement\n");
+    printf("Switch statement\n");
 }
 int casestatement(FILE *IN) //情况子语句
 {
@@ -505,6 +609,21 @@ int parameters(FILE *IN)
 {
     printf("Parameters\n");
 }
+
+int expression(FILE *IN)//表达式
+{
+    printf("\tExpression\n");
+}
+int item(FILE *IN) //项
+{
+    printf("\tItem\n");
+}
+int factor(FILE *IN) //因子
+{
+    printf("\tFactor\n");
+}
+
+
 int nextsym(FILE *IN)
 {
     int t=0, i;
@@ -515,7 +634,6 @@ int nextsym(FILE *IN)
     {
         token[t]=ch;
         ch=fgetc(IN);
-        //printf("%c\n",ch);
         while(isdigit(ch))
         {
             token[++t]=ch;
@@ -523,10 +641,6 @@ int nextsym(FILE *IN)
         }
         if(!feof(IN)) //否则文件最后一个字符为数字时会进入无限循环
             fseek(IN,-1L,SEEK_CUR);
-        //fprintf(OUT,"%d\tINT\t",No++);
-        //for(i=0;i<=t;i++)
-         //   fprintf(OUT,"%c",token[i]);
-        //fprintf(OUT,"INTTYPE\n");
         return inttype;
     }
     else if (isalpha(ch)) //如果是字母
@@ -576,9 +690,6 @@ int nextsym(FILE *IN)
             if(t==0) return chartype;
             else return identsym;
         }
-        //for(i=0;i<=t;i++)
-        //    fprintf(OUT,"%c",token[i]);
-        //fprintf(OUT,"\n");
     }
     else if ((ch=='=')|(ch=='<')|(ch=='>')|(ch=='!')) //如果是比较运算符
     {
@@ -590,21 +701,14 @@ int nextsym(FILE *IN)
             switch(token[0])
             {
                 case '=':
-                    //fprintf(OUT,"%d\tEQUAL\t",No++); break;
                     return equal;
                 case '<':
-                    //fprintf(OUT,"%d\tLOE\t",No++); break;
                     return loe;
                 case '>':
-                    //fprintf(OUT,"%d\tMOE\t",No++); break;
                     return moe;
                 case '!':
-                    //fprintf(OUT,"%d\tNOTEQ\t",No++); break;
                     return noteq;
             }
-        //    for(i=0;i<=t;i++)
-        //        fprintf(OUT,"%c",token[i]);
-        //    fprintf(OUT,"\n");
         }
         else
         {
@@ -612,21 +716,12 @@ int nextsym(FILE *IN)
             switch(token[0])
             {
                 case '=':
-                    //fprintf(OUT,"%d\tEQUMARK\t",No++); break;
                     return equmark;
                 case '<':
-                    //fprintf(OUT,"%d\tLES\t",No++); break;
                     return les;
                 case '>':
-                    //fprintf(OUT,"%d\tMOR\t",No++); break;
                     return mor;
             }
-            //if(token[0]=='!');
-            //else{
-            //    for(i=0;i<=t;i++)
-            //        fprintf(OUT,"%c",token[i]);
-            //    fprintf(OUT,"\n");
-            //}
         }
     }
     else //是其他字符
@@ -641,49 +736,35 @@ int nextsym(FILE *IN)
                 if (blankflag==0) return nextsym(IN);
                 else return blank;
             case '+':
-                //fprintf(OUT,"%d\tADD\t%c\n",No++,ch); break;
                 return add;
             case '-':
-                //fprintf(OUT,"%d\tSUB\t%c\n",No++,ch); break;
                 return sub;
             case '*':
-                //fprintf(OUT,"%d\tMUL\t%c\n",No++,ch); break;
                 return mult;
             case '/':
-                //fprintf(OUT,"%d\tDIV\t%c\n",No++,ch); break;
                 return divi;
             case ',':
-                //fprintf(OUT,"%d\tCOMMA\t%c\n",No++,ch); break;
                 return comma;
             case ':':
-                //fprintf(OUT,"%d\tCOLON\t%c\n",No++,ch); break;
                 return colon;
             case ';':
-                //fprintf(OUT,"%d\tSEMICOL\t%c\n",No++,ch); break;
                 return semicolon;
             case '\'':
-                //printf("%d\tSINGUO\t%c\n",No++,ch); //break;
                 return sinquo;
             case '\"':
-                //fprintf(OUT,"%d\tDOUQUO\t%c\n",No++,ch); break;
                 return douquo;
             case '(':
                 //fprintf(OUT,"%d\tLPARENT\t%c\n",No++,ch); break;
                 return lparent;
             case ')':
-                //fprintf(OUT,"%d\tRPARENT\t%c\n",No++,ch); break;
                 return rparent;
             case '[':
-                //fprintf(OUT,"%d\tLBRACK\t%c\n",No++,ch); break;
                 return lbracket;
             case ']':
-                //fprintf(OUT,"%d\tRBRACK\t%c\n",No++,ch); break;
                 return rbracket;
             case '{':
-                //fprintf(OUT,"%d\tLBRACE\t%c\n",No++,ch); break;
                 return lbrace;
             case '}':
-                //fprintf(OUT,"RBRACE\n");
                 return rbrace;
             case '#':
             case '$':
