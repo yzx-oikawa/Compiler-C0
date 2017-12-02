@@ -56,6 +56,7 @@ int readstatement(); //读语句
 int writestatement(); //写语句
 int returnstatement(); //返回语句
 int constant();//常量
+int constforcase();
 int strings();//字符串
 
 /*＜常量说明＞ ::=  const＜常量定义＞;{ const＜常量定义＞;}*/
@@ -87,7 +88,7 @@ int constdec(FILE *IN)
                     | char＜标识符＞＝＜字符＞{,＜标识符＞＝＜字符＞}*/
 int constdef(FILE *IN)
 {
-    printf("\tConstdef begin:\n");
+    printf("\tConstdef\n");
     sym=nextsym(IN);
     if(sym==intsym){
         while(1)
@@ -100,7 +101,7 @@ int constdef(FILE *IN)
                 if(sym==equmark)//等号
                 {
                     sym=nextsym(IN);
-                    if(sym==inttype)//整数
+                    if(sym==inttype||sym==numtype)//整数
                     {
                         sym=nextsym(IN);
                         if(sym==comma)//逗号
@@ -129,7 +130,8 @@ int constdef(FILE *IN)
                     if(sym==sinquo)//单引号
                     {
                         sym=nextsym(IN);
-                        if(sym==chartype)//字符
+                        if(sym==chartype||sym==numtype||
+                           (sym>=add&&sym<=divi))//字符
                         {
                             sym=nextsym(IN);
                             if(sym==sinquo)//单引号
@@ -184,7 +186,7 @@ int vardec(FILE *IN)
 /*＜变量定义＞  ::= ＜类型标识符＞(＜标识符＞|＜标识符＞‘[’＜无符号整数＞‘]’){,(＜标识符＞|＜标识符＞‘[’＜无符号整数＞‘]’ )}  */
 int vardef(FILE *IN)
 {
-    printf("\tVardef begin:\n");
+    printf("\tVardef\n");
     while(1)
     {
         //sym是左方括号或者逗号或者分号
@@ -200,7 +202,7 @@ int vardef(FILE *IN)
             if(sym==lbracket)//左方括号，是数组
             {
                 sym=nextsym(IN);
-                if(sym==inttype)//无符号整数
+                if(sym==inttype||sym==numtype)//无符号整数
                 {
                     sym=nextsym(IN);
                     if(sym==rbracket)//右方括号
@@ -224,7 +226,7 @@ int vardef(FILE *IN)
                 return;
             }
         }
-        else if(sym==inttype)//无符号整数
+        else if(sym==inttype||sym==numtype)//无符号整数
         {
             sym=nextsym(IN);
             if(sym==rbracket)//右方括号
@@ -479,16 +481,13 @@ int statement(FILE *IN)
                 }
                 else if(sym==equmark||sym==lbracket)//等号或左方括号，为赋值语句
                 {
-                    //printf("%d\n",sym);
                     assignstatement(IN);
                     continue;
                 }
                 else
-                   // printf("%d\n",sym);
                     printf("statementerror\n");
                     continue;
             default:
-                //printf("default %d\n",sym);
                 continue;
         }
     }
@@ -643,7 +642,7 @@ int casestatement(FILE *IN) //情况子语句
     while(1)
     {
         sym=nextsym(IN);
-        if(sym==sinquo||sym==inttype)//单引号或者整数
+        if(sym==sinquo||sym==inttype||sym==numtype)//单引号或者整数
         {
             if(constant(IN)==1)//常量
                 printf("Case statement\n");
@@ -789,7 +788,7 @@ int constant(FILE *IN)
     //sym此时为'或者整数
     if(sym==sinquo){//单引号
         sym=nextsym(IN);
-        if((sym>=add&&sym<=divi)||sym==chartype||sym==underline||sym==inttype)
+        if((sym>=add&&sym<=divi)||sym==chartype||sym==underline||sym==numtype)
         {
             sym=nextsym(IN);
             if(sym==sinquo)//单引号
@@ -804,11 +803,36 @@ int constant(FILE *IN)
             return 0;
         }
     }
-    else if(sym==inttype)
+    else if(sym==inttype||sym==numtype)
         return 1;
     return 0;
 }
 
+/*情况语句中，switch后面的表达式和case后面的常量只允许出现int和char类型*/
+int constforcase(FILE *IN)
+{
+    //sym此时为'或者整数
+    if(sym==sinquo){//单引号
+        sym=nextsym(IN);
+        if(sym==chartype||sym==numtype)
+        {
+            sym=nextsym(IN);
+            if(sym==sinquo)//单引号
+                return 1;
+            else{
+                printf("constanterror\n");
+                return 0;
+            }
+        }
+        else{
+            sym=nextsym(IN);//单引号
+            return 0;
+        }
+    }
+    else if(sym==inttype||sym==numtype)
+        return 1;
+    return 0;
+}
 /*＜字符串＞ ::=  "｛十进制编码为32,33,35-126的ASCII字符｝"*/
 int strings(FILE *IN)
 {
@@ -861,7 +885,8 @@ int nextsym(FILE *IN)
         }
         if(!feof(IN)) //否则文件最后一个字符为数字时会进入无限循环
             fseek(IN,-1L,SEEK_CUR);
-        return inttype;
+        if(t==0) return numtype;
+        else return inttype;
     }
     else if (isalpha(ch)) //如果是字母
     {
