@@ -16,7 +16,7 @@ const enum symbol {constsym, intsym, charsym, voidsym, mainsym, ifsym, elsesym, 
                    add, sub, mult, divi, les, loe, mor, moe, noteq, equal,               //14-23
                    comma, colon, semicolon, sinquo, douquo, equmark,                     //24-29
                    lparent, rparent, lbracket, rbracket, lbrace, rbrace,                 //30-35
-                   identsym, inttype, chartype, strtype, blank};                         //36-40
+                   identsym, inttype, chartype, numtype, strtype, blank, underline};     //36-42
 
 int No=1;
 int sym;
@@ -55,6 +55,8 @@ int valuepara(); //值参数表
 int readstatement(); //读语句
 int writestatement(); //写语句
 int returnstatement(); //返回语句
+int constant();//常量
+int strings();//字符串
 
 /*＜常量说明＞ ::=  const＜常量定义＞;{ const＜常量定义＞;}*/
 int constdec(FILE *IN)
@@ -428,7 +430,7 @@ int statement(FILE *IN)
                 return;
             case semicolon:
                 sym=nextsym(IN);
-                if(sym==rbrace)//花括号
+                if(sym==rbrace)//右花括号
                     return;
                 else continue;
             case ifsym:
@@ -442,6 +444,9 @@ int statement(FILE *IN)
             case switchsym:
                 switchstatement(IN);
                 continue;
+            case casesym:
+            case defaultsym:
+                return;
             case scanfsym:
                 readstatement(IN);
                 continue;
@@ -479,6 +484,7 @@ int statement(FILE *IN)
                     continue;
                 }
                 else
+                   // printf("%d\n",sym);
                     printf("statementerror\n");
                     continue;
             default:
@@ -573,7 +579,7 @@ int condition(FILE *IN)
     return;
 }
 
-/*＜循环语句＞   ::=  while ‘(’＜条件＞‘)’＜语句＞*/
+/*＜循环语句＞ ::= while ‘(’＜条件＞‘)’＜语句＞*/
 int whilestatement(FILE *IN) //循环语句
 {
     printf("While statement begin:\n");
@@ -595,18 +601,88 @@ int whilestatement(FILE *IN) //循环语句
         }
     }
 }
+
+/*＜情况语句＞ ::= switch ‘(’＜表达式＞‘)’ ‘{’＜情况表＞[＜缺省＞] ‘}’*/
 int switchstatement(FILE *IN) //情况语句
 {
-    printf("Switch statement\n");
+    printf("Switch statement:\n");
+    //此时sym为switch
+    sym=nextsym(IN);
+    {
+        if(sym==lparent)//左括号
+        {
+            expression(IN);
+            sym=nextsym(IN);
+            if(sym==rparent)//右括号
+            {
+                sym=nextsym(IN);
+                if(sym==lbrace)//左花括号
+                {
+                    sym=nextsym(IN);
+                    if(sym==casesym){//case
+                        casestatement(IN);
+                        //sym=nextsym(IN);
+                        if(sym==rbrace)//右花括号
+                        {
+                            sym=nextsym(IN);
+                            return;
+                        }
+                        else
+                            printf("switcherror\n");
+                    }
+                }
+            }
+        }
+    }
 }
+
+/*＜情况子语句＞  ::=  case＜常量＞：＜语句＞*/
 int casestatement(FILE *IN) //情况子语句
 {
-    printf("Case statement\n");
+    //sym现在是case
+    while(1)
+    {
+        sym=nextsym(IN);
+        if(sym==sinquo||sym==inttype)//单引号或者整数
+        {
+            if(constant(IN)==1)//常量
+                printf("Case statement\n");
+            sym=nextsym(IN);
+            if(sym==colon)//冒号
+            {
+                sym=nextsym(IN);
+                statement(IN);//语句 可能返回右花括号、case、default
+                if(sym==casesym){//下一个case
+                    //printf("Case statement\n");
+                    continue;
+                }
+                else if(sym==defaultsym){//default
+                    defaultstatement(IN);
+                    return;
+                }
+                else if (sym==rbrace)//右花括号
+                    return;
+            }
+        }
+    }
+
 }
+
+/*＜缺省＞ ::=  default : ＜语句＞*/
 int defaultstatement(FILE *IN) //缺省
 {
     printf("Default statement\n");
+    //sym现在是default
+    sym=nextsym(IN);
+    {
+        if(sym==colon)//冒号
+        {
+            sym=nextsym(IN);
+            statement(IN);//语句
+        }
+    }
 }
+
 int retfuncuse(FILE *IN) //有返回值函数调用语句
 {
     printf("Return funcuse\n");
@@ -641,15 +717,113 @@ int readstatement(FILE *IN) //读语句
         }
     }
 }
+
+/*＜写语句＞ ::= printf ‘(’ ＜字符串＞,＜表达式＞ ‘)’
+               | printf ‘(’＜字符串＞ ‘)’| printf ‘(’＜表达式＞‘)’*/
 int writestatement(FILE *IN) //写语句
 {
     printf("Write statement\n");
+    //此时sym为printf
+    sym=nextsym(IN);
+    if(sym==lparent)//左括号
+    {
+        sym=nextsym(IN);
+        if(sym==douquo)//双引号，字符串
+        {
+            strings(IN);
+            sym=nextsym(IN);
+            if(sym==comma)//逗号，字符串后有表达式
+            {
+                expression(IN);
+                sym=nextsym(IN);
+                if(sym==rparent)//右括号
+                {
+                    sym=nextsym(IN);//分号
+                    return;
+                }
+            }
+            else if(sym==rparent)//右括号
+            {
+                sym=nextsym(IN);//分号
+                return;
+            }
+        }
+        else//表达式
+        {
+            expression(IN);
+            if(sym==rparent)//右括号
+            {
+                sym=nextsym(IN);//分号
+                return;
+            }
+        }
+    }
 }
+
+/*＜返回语句＞ ::=  return[‘(’＜表达式＞‘)’] */
 int returnstatement(FILE *IN) //返回语句
 {
     printf("Return statement\n");
+    sym=nextsym(IN);
+    //此时sym为return
+    if(sym==lparent)//左括号
+    {
+        expression(IN);
+        sym=nextsym(IN);
+        {
+            if(sym==rparent){//右括号
+                sym=nextsym(IN);
+                return;
+            }
+        }
+    }
+    else//分号
+        return;
 }
 
+
+/*＜常量＞ ::=  ＜整数＞|＜字符＞
+  ＜字符＞ ::='＜加法运算符＞'｜'＜乘法运算符＞'｜'＜字母＞'｜'＜数字＞'*/
+int constant(FILE *IN)
+{
+    //sym此时为'或者整数
+    if(sym==sinquo){//单引号
+        sym=nextsym(IN);
+        if((sym>=add&&sym<=divi)||sym==chartype||sym==underline||sym==inttype)
+        {
+            sym=nextsym(IN);
+            if(sym==sinquo)//单引号
+                return 1;
+            else{
+                printf("constanterror\n");
+                return 0;
+            }
+        }
+        else{
+            sym=nextsym(IN);//单引号
+            return 0;
+        }
+    }
+    else if(sym==inttype)
+        return 1;
+    return 0;
+}
+
+/*＜字符串＞ ::=  "｛十进制编码为32,33,35-126的ASCII字符｝"*/
+int strings(FILE *IN)
+{
+    printf("\tString\n");
+    //sym此时为"
+    sym=nextsym(IN);
+    while(sym!=douquo)
+    {
+        if(sym>=constsym&&sym<=underline)
+            sym=nextsym(IN);
+        else
+            return;
+    }
+    return;//返回了双引号
+}
 
 int parameters(FILE *IN)
 {
@@ -812,6 +986,8 @@ int nextsym(FILE *IN)
                 return lbrace;
             case '}':
                 return rbrace;
+            case '_':
+                return underline;
             case '#':
             case '$':
             case '.':
@@ -819,7 +995,6 @@ int nextsym(FILE *IN)
             case '@':
             case '\\':
             case '^':
-            case '_':
             case '`':
             case '|':
             case '~':
