@@ -23,6 +23,7 @@ int sym;
 int blankflag=0; //0-跳过空格 1-不跳过空格
 int vardecbegflag=0;//1-变量声明开始
 int vardecendflag=0;//1-变量声明结束
+int braceflag=0;
 char ch; //字符
 char token[100]; //字符串
 
@@ -406,7 +407,7 @@ int statements(FILE *IN)
     //}
     //语句
     statement(IN);
-    printf("Statements end:\n");
+    printf("Statements end\n");
     if(sym==rbrace) return;
     else printf("mainerror\n");
     return;
@@ -451,9 +452,14 @@ int statement(FILE *IN)
                 returnstatement(IN);
                 continue;
             case lbrace:
+                braceflag++;
                 sym=nextsym(IN);
                 statement(IN);
                 if(sym==rbrace){
+                    if(braceflag>0){
+                        printf("statement end\n");
+                       braceflag--;
+                    }
                     sym=nextsym(IN);
                     continue;
                 }
@@ -482,6 +488,7 @@ int statement(FILE *IN)
     }
 
 }
+
 /*＜赋值语句＞ ::= ＜标识符＞＝＜表达式＞|＜标识符＞‘[’＜表达式＞‘]’=＜表达式＞*/
 int assignstatement(FILE *IN) //赋值语句
 {
@@ -521,7 +528,7 @@ int assignstatement(FILE *IN) //赋值语句
 /*＜条件语句＞::= if ‘(’＜条件＞‘)’＜语句＞else＜语句＞*/
 int ifstatement(FILE *IN) //情况语句
 {
-    printf("If statement:\n");
+    printf("If statement begin:\n");
     //此时sym是if
     sym=nextsym(IN);
     if(sym==lparent)//左括号
@@ -539,13 +546,11 @@ int ifstatement(FILE *IN) //情况语句
                 printf("Else statement:\n");
                 sym=nextsym(IN);
                 statement(IN);//语句
-                if(sym==rbrace)
-                //    sym=nextsym(IN);
-                return;
-                else
-                {
-                    printf("iferror\n");
+                if(sym==rbrace){
+                    //printf("If statement end\n");
+                    return;
                 }
+                else printf("iferror\n");
             }
         }
     }
@@ -567,9 +572,28 @@ int condition(FILE *IN)
     }
     return;
 }
+
+/*＜循环语句＞   ::=  while ‘(’＜条件＞‘)’＜语句＞*/
 int whilestatement(FILE *IN) //循环语句
 {
-    printf("While statement\n");
+    printf("While statement begin:\n");
+    //此时sym是while
+    sym=nextsym(IN);
+    if(sym==lparent)//左括号
+    {
+        condition(IN);//条件
+        sym=nextsym(IN);
+        if(sym==rparent)//右括号
+        {
+            sym=nextsym(IN);
+            statement(IN);//语句
+            if(sym==rbrace){
+                //printf("While statement end\n");
+                return;
+            }
+            else printf("whileerror\n");
+        }
+    }
 }
 int switchstatement(FILE *IN) //情况语句
 {
@@ -577,31 +601,53 @@ int switchstatement(FILE *IN) //情况语句
 }
 int casestatement(FILE *IN) //情况子语句
 {
-    printf("\tCase statement\n");
+    printf("Case statement\n");
 }
 int defaultstatement(FILE *IN) //缺省
 {
-    printf("\tDefault statement\n");
+    printf("Default statement\n");
 }
 int retfuncuse(FILE *IN) //有返回值函数调用语句
 {
-    printf("\tReturn funcuse\n");
+    printf("Return funcuse\n");
 }
 int voidfuncuse(FILE *IN) //无返回值函数调用语句
 {
-    printf("\tVoid funcuse\n");
+    printf("Void funcuse\n");
 }
+
+/*＜读语句＞ ::=  scanf ‘(’＜标识符＞{,＜标识符＞}‘)’*/
 int readstatement(FILE *IN) //读语句
 {
-    printf("\tRead statement\n");
+    printf("Read statement\n");
+    //此时sym是scanf
+    sym=nextsym(IN);
+    if(sym==lparent)//左括号
+    {
+        while(1)
+        {
+            sym=nextsym(IN);
+            if(sym==identsym||sym==chartype)//标识符
+            {
+                sym=nextsym(IN);
+                if(sym==comma)//下一个标识符
+                    continue;
+                else{//右括号
+                    sym=nextsym(IN);//分号
+                    return;
+                }
+
+            }
+        }
+    }
 }
 int writestatement(FILE *IN) //写语句
 {
-    printf("\tWrite statement\n");
+    printf("Write statement\n");
 }
 int returnstatement(FILE *IN) //返回语句
 {
-    printf("\tReturn statement\n");
+    printf("Return statement\n");
 }
 
 
