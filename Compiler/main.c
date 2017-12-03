@@ -18,7 +18,7 @@ const enum symbol {constsym, intsym, charsym, voidsym, mainsym, ifsym, elsesym, 
                    lparent, rparent, lbracket, rbracket, lbrace, rbrace,                 //30-35
                    identsym, inttype, chartype, numtype, strtype, blank, underline};     //36-42
 
-FILE *OUT;
+FILE *IN, *OUT;
 int No=1;
 int sym;
 int blankflag=0; //0-跳过空格 1-不跳过空格
@@ -61,16 +61,16 @@ int constforcase();
 int strings();//字符串
 
 /*＜常量说明＞ ::=  const＜常量定义＞;{ const＜常量定义＞;}*/
-int constdec(FILE *IN)
+int constdec()
 {
     printf("Constdec begin:\n");
     fprintf(OUT,"Constdec begin:\n");
     while(1)
     {
-        constdef(IN);
+        constdef();
         if(sym==semicolon)//分号
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==constsym)//下一个常量说明
                 continue;
             else
@@ -86,27 +86,27 @@ int constdec(FILE *IN)
 
 /*＜常量定义＞   ::=   int＜标识符＞＝＜整数＞{,＜标识符＞＝＜整数＞}
                     | char＜标识符＞＝＜字符＞{,＜标识符＞＝＜字符＞}*/
-int constdef(FILE *IN)
+int constdef()
 {
     printf("\tConstdef\n");
     fprintf(OUT,"\tConstdef\n");
-    sym=nextsym(IN);
+    sym=nextsym();
     if(sym==intsym){
         while(1)
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==identsym||sym==chartype)//标识符
             {
                 //登录符号表
-                sym=nextsym(IN);
+                sym=nextsym();
                 if(sym==equmark)//等号
                 {
-                    sym=nextsym(IN);
+                    sym=nextsym();
                     if(sym==add||sym==sub)
-                        sym=nextsym(IN);
+                        sym=nextsym();
                     if(sym==inttype||sym==numtype)//整数
                     {
-                        sym=nextsym(IN);
+                        sym=nextsym();
                         if(sym==comma)//逗号
                             continue;
                         else//分号
@@ -119,24 +119,24 @@ int constdef(FILE *IN)
     else if(sym==charsym){
         while(1)
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==identsym||sym==chartype)//标识符
             {
                 //登录符号表
-                sym=nextsym(IN);
+                sym=nextsym();
                 if(sym==equmark)//等号
                 {
-                    sym=nextsym(IN);
+                    sym=nextsym();
                     if(sym==sinquo)//单引号
                     {
-                        sym=nextsym(IN);
+                        sym=nextsym();
                         if(sym==chartype||sym==numtype||
                            (sym>=add&&sym<=divi)||sym==underline)//字符
                         {
-                            sym=nextsym(IN);
+                            sym=nextsym();
                             if(sym==sinquo)//单引号
                             {
-                                sym=nextsym(IN);
+                                sym=nextsym();
                                 if(sym==comma)//逗号
                                     continue;
                                 else//分号
@@ -152,7 +152,7 @@ int constdef(FILE *IN)
 }
 
 /*＜变量说明＞  ::= ＜变量定义＞;{＜变量定义＞;}*/
-int vardec(FILE *IN)
+int vardec()
 {
     if(vardecbegflag==0){
         printf("Vardec begin:\n");
@@ -163,10 +163,10 @@ int vardec(FILE *IN)
     while(1)
     {
         //sym是左方括号或者逗号或者分号
-        vardef(IN);
+        vardef();
         if(sym==semicolon)//分号
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==intsym||sym==charsym)//下一个变量说明或者函数定义
                 return;
             else{
@@ -183,7 +183,7 @@ int vardec(FILE *IN)
 }
 
 /*＜变量定义＞  ::= ＜类型标识符＞(＜标识符＞|＜标识符＞‘[’＜无符号整数＞‘]’){,(＜标识符＞|＜标识符＞‘[’＜无符号整数＞‘]’ )}  */
-int vardef(FILE *IN)
+int vardef()
 {
     printf("\tVardef\n");
     fprintf(OUT,"\tVardef\n");
@@ -192,19 +192,19 @@ int vardef(FILE *IN)
         //sym是左方括号或者逗号或者分号
         if(sym==semicolon)
             return;
-        sym=nextsym(IN);
+        sym=nextsym();
         if(sym==identsym||sym==chartype)//标识符
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==lbracket)//左方括号，是数组
             {
-                sym=nextsym(IN);
+                sym=nextsym();
                 if(sym==inttype||sym==numtype)//无符号整数
                 {
-                    sym=nextsym(IN);
+                    sym=nextsym();
                     if(sym==rbracket)//右方括号
                     {
-                        sym=nextsym(IN);
+                        sym=nextsym();
                         if(sym==comma)//逗号
                             continue;
                         else//分号
@@ -219,10 +219,10 @@ int vardef(FILE *IN)
         }
         else if(sym==inttype||sym==numtype)//无符号整数
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==rbracket)//右方括号
             {
-                sym=nextsym(IN);
+                sym=nextsym();
                 if(sym==comma)//逗号
                     continue;
                 else//分号
@@ -233,17 +233,17 @@ int vardef(FILE *IN)
 }
 
 /*区分变量声明和有返回值函数定义*/
-int differ(FILE *IN)
+int differ()
 {
     //读到了类型标识符
     while(1){
-        sym=nextsym(IN);
+        sym=nextsym();
         if(sym==identsym||sym==chartype)//标识符
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==lbracket||sym==comma||sym==semicolon)//左方括号或逗号或分号
             {
-                vardec(IN);
+                vardec();
             }
             else{
                 if(vardecendflag==0){
@@ -252,7 +252,7 @@ int differ(FILE *IN)
                     vardecendflag=1;
                 }
                 if (sym==lbrace||sym==lparent)//左花括号或左括号
-                    retfuncdef(IN);
+                    retfuncdef();
             }
         }
         else if(sym==intsym||sym==charsym)
@@ -266,15 +266,15 @@ int differ(FILE *IN)
 
 /*＜有返回值函数定义＞  ::=  ＜声明头部＞‘(’＜参数＞‘)’ ‘{’＜复合语句＞‘}’
                             |＜声明头部＞‘{’＜复合语句＞‘}’ */
-int retfuncdef(FILE *IN)
+int retfuncdef()
 {
     while(1){
         printf("Retfuncdef begin:\n");
         fprintf(OUT,"Retfuncdef begin:\n");
         if(sym==lbrace)//左花括号
         {
-            sym=nextsym(IN);
-            statements(IN);//复合语句
+            sym=nextsym();
+            statements();//复合语句
             if(sym==rbrace)//右花括号
             {
                 printf("Retfundef end:\n");
@@ -284,14 +284,14 @@ int retfuncdef(FILE *IN)
         }
         else if(sym==lparent)//左括号
         {
-            parameters(IN);//参数
+            parameters();//参数
             if(sym==rparent)//右括号
             {
-                sym=nextsym(IN);
+                sym=nextsym();
                 if(sym==lbrace)//左花括号
                 {
-                    sym=nextsym(IN);
-                    statements(IN);//复合语句
+                    sym=nextsym();
+                    statements();//复合语句
                     if(sym==rbrace)//右花括号
                     {
                         printf("Retfuncdef end:\n");
@@ -306,7 +306,7 @@ int retfuncdef(FILE *IN)
 
 /*＜无返回值函数定义＞  ::= void＜标识符＞(’＜参数＞‘)’‘{’＜复合语句＞‘}’
                           | void＜标识符＞{’＜复合语句＞‘}’*/
-int voidfuncdef(FILE *IN)
+int voidfuncdef()
 {
     //sym是标识符
     printf("Voidfuncdef begin:\n");
@@ -315,17 +315,17 @@ int voidfuncdef(FILE *IN)
     {
         if(sym==identsym||sym==chartype)//标识符
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==lparent)//左括号
             {
-                parameters(IN);//参数
+                parameters();//参数
                 if(sym==rparent)//右括号
                 {
-                    sym=nextsym(IN);
+                    sym=nextsym();
                     if(sym==lbrace)//左花括号
                     {
-                        sym=nextsym(IN);
-                        statements(IN);//语句
+                        sym=nextsym();
+                        statements();//语句
                         if(sym==rbrace)//右花括号
                         {
                             printf("Voidfuncdef end\n");
@@ -337,8 +337,8 @@ int voidfuncdef(FILE *IN)
             }
             else if(sym==lbrace)//左花括号
             {
-                sym=nextsym(IN);
-                statements(IN);//复合语句
+                sym=nextsym();
+                statements();//复合语句
                 if(sym==rbrace)//右花括号
                 {
                     printf("Voidfuncdef end\n");
@@ -351,17 +351,17 @@ int voidfuncdef(FILE *IN)
 }
 
 /*＜参数表＞  ::=  ＜类型标识符＞＜标识符＞{,＜类型标识符＞＜标识符＞}*/
-int parameters(FILE *IN)//参数表
+int parameters()//参数表
 {
     printf("\tParameters\n");
     fprintf(OUT,"\tParameters\n");
     //sym此时为左括号
     while(sym!=rparent)
     {
-        sym=nextsym(IN);
+        sym=nextsym();
         if(sym==intsym||sym==charsym)//类型标识符
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==identsym||sym==charsym)//标识符
                 continue;
         }
@@ -370,22 +370,22 @@ int parameters(FILE *IN)//参数表
 }
 
 /*＜主函数＞  ::= void main‘(’‘)’‘{’＜复合语句＞‘}’ */
-int mainfunc(FILE *IN)
+int mainfunc()
 {
     //sym此时为main
     printf("Mainfunc begin:\n");
     fprintf(OUT,"Mainfunc begin:\n");
-    sym=nextsym(IN);
+    sym=nextsym();
     if(sym==lparent)//左括号
     {
-        sym=nextsym(IN);
+        sym=nextsym();
         if(sym==rparent)//右括号
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==lbrace)//左花括号
             {
-                sym=nextsym(IN);
-                statements(IN);//复合语句
+                sym=nextsym();
+                statements();//复合语句
                 if(sym==rbrace)//右花括号
                 {
                     printf("Mainfunc end\n");
@@ -398,7 +398,7 @@ int mainfunc(FILE *IN)
 }
 
 /*＜复合语句＞   ::=  ［＜常量说明＞］［＜变量说明＞］｛＜语句＞｝*/
-int statements(FILE *IN)
+int statements()
 {
     printf("Statements begin:\n");
     fprintf(OUT,"Statements begin:\n");
@@ -406,13 +406,13 @@ int statements(FILE *IN)
     vardecendflag=1;
     //常量声明
     if(sym==constsym){
-        constdec(IN);
+        constdec();
     }
     //变量声明
     if(sym==intsym||sym==charsym)//类型标识符
-        differ(IN);
+        differ();
     //语句
-    statement(IN);
+    statement();
     printf("Statements end\n");
     fprintf(OUT,"Statements end\n");
     if(sym==rbrace) return;
@@ -424,7 +424,7 @@ int statements(FILE *IN)
             ｜＜有返回值函数调用语句＞; |＜无返回值函数调用语句＞;
             ｜＜赋值语句＞;｜＜读语句＞;｜＜写语句＞;｜＜空＞;
             |＜情况语句＞｜＜返回语句＞*/
-int statement(FILE *IN)
+int statement()
 {
     while(!feof(IN)){
         switch(sym)
@@ -432,60 +432,60 @@ int statement(FILE *IN)
             case rbrace:;
                 return;
             case semicolon:
-                sym=nextsym(IN);
+                sym=nextsym();
                 if(sym==rbrace)//右花括号
                     return;
                 else continue;
             case ifsym:
-                ifstatement(IN);
+                ifstatement();
                 continue;
             case elsesym:
                 return;
             case whilesym:
-                whilestatement(IN);
+                whilestatement();
                 continue;
             case switchsym:
-                switchstatement(IN);
+                switchstatement();
                 continue;
             case casesym:
             case defaultsym:
                 return;
             case scanfsym:
-                readstatement(IN);
+                readstatement();
                 continue;
             case printfsym:
-                writestatement(IN);
+                writestatement();
                 continue;
             case returnsym:
-                returnstatement(IN);
+                returnstatement();
                 continue;
             case lbrace:
                 braceflag++;
-                sym=nextsym(IN);
-                statement(IN);
+                sym=nextsym();
+                statement();
                 if(sym==rbrace){
                     if(braceflag>0){
                         printf("statement end\n");
                         fprintf(OUT,"statement end\n");
                         braceflag--;
                     }
-                    sym=nextsym(IN);
+                    sym=nextsym();
                     continue;
                 }
                 else printf("errorlbrace\n");break;
             case identsym:
             case chartype:
-                sym=nextsym(IN);
+                sym=nextsym();
                 if(sym==lparent||sym==semicolon)//左括号或分号，为函数调用语句
                 {
-                    voidfuncuse(IN);//返回了右括号
-                    sym=nextsym(IN);
+                    voidfuncuse();//返回了右括号
+                    sym=nextsym();
                     if(sym==semicolon)//括号
                         continue;
                 }
                 else if(sym==equmark||sym==lbracket)//等号或左方括号，为赋值语句
                 {
-                    assignstatement(IN);
+                    assignstatement();
                     continue;
                 }
                 else
@@ -499,23 +499,23 @@ int statement(FILE *IN)
 }
 
 /*＜赋值语句＞ ::= ＜标识符＞＝＜表达式＞|＜标识符＞‘[’＜表达式＞‘]’=＜表达式＞*/
-int assignstatement(FILE *IN) //赋值语句
+int assignstatement() //赋值语句
 {
     printf("Assign statement\n");
     fprintf(OUT,"Assign statement\n");
     //sym此时为等号或左方括号
     if(sym==lbracket)//左方括号，数组赋值
     {
-		sym=nextsym(IN);
-        expression(IN);//表达式
+		sym=nextsym();
+        expression();//表达式
         {
             if(sym==rbracket)//右方括号
             {
-                sym=nextsym(IN);
+                sym=nextsym();
                 if(sym==equmark)//等号
                 {
-					sym=nextsym(IN);
-                    expression(IN);//表达式
+					sym=nextsym();
+                    expression();//表达式
                     return;
                 }
             }
@@ -523,36 +523,36 @@ int assignstatement(FILE *IN) //赋值语句
     }
     else if(sym==equmark)//等号
     {
-		sym=nextsym(IN);
-        expression(IN);//表达式
+		sym=nextsym();
+        expression();//表达式
         return;
     }
     return;
 }
 
 /*＜条件语句＞::= if ‘(’＜条件＞‘)’＜语句＞else＜语句＞*/
-int ifstatement(FILE *IN) //情况语句
+int ifstatement() //情况语句
 {
     printf("If statement begin:\n");
     fprintf(OUT,"If statement begin:\n");
     //sym此时为if
-    sym=nextsym(IN);
+    sym=nextsym();
     if(sym==lparent)//左括号
     {
-        condition(IN);//条件
-        sym=nextsym(IN);
+        condition();//条件
+        sym=nextsym();
         if(sym==rparent)//右括号
         {
-            sym=nextsym(IN);
-            statement(IN);//语句
+            sym=nextsym();
+            statement();//语句
             if(sym==rbrace)
-                sym=nextsym(IN);
+                sym=nextsym();
             if(sym==elsesym)//else
             {
                 printf("Else statement:\n");
                 fprintf(OUT,"Else statement:\n");
-                sym=nextsym(IN);
-                statement(IN);//语句
+                sym=nextsym();
+                statement();//语句
                 if(sym==rbrace)
                     return;
                 else printf("iferror\n");
@@ -562,37 +562,37 @@ int ifstatement(FILE *IN) //情况语句
 }
 
 /*＜条件＞ ::=  ＜表达式＞＜关系运算符＞＜表达式＞｜＜表达式＞*/
-int condition(FILE *IN)
+int condition()
 {
     printf("\tcondition\n");
     fprintf(OUT,"\tcondition\n");
     //此时sym是左括号
-    sym=nextsym(IN);
-    expression(IN);//表达式
-    sym=nextsym(IN);
+    sym=nextsym();
+    expression();//表达式
+    sym=nextsym();
     if(sym>=les&&sym<=equal)//关系运算符
     {
-        sym=nextsym(IN);
-        expression(IN);
+        sym=nextsym();
+        expression();
     }
     return;
 }
 
 /*＜循环语句＞ ::= while ‘(’＜条件＞‘)’＜语句＞*/
-int whilestatement(FILE *IN) //循环语句
+int whilestatement() //循环语句
 {
     printf("While statement begin:\n");
     fprintf(OUT,"While statement begin:\n");
     //sym此时为while
-    sym=nextsym(IN);
+    sym=nextsym();
     if(sym==lparent)//左括号
     {
-        condition(IN);//条件
-        sym=nextsym(IN);
+        condition();//条件
+        sym=nextsym();
         if(sym==rparent)//右括号
         {
-            sym=nextsym(IN);
-            statement(IN);//语句
+            sym=nextsym();
+            statement();//语句
             if(sym==rbrace)
                 return;
             else printf("whileerror\n");
@@ -601,28 +601,28 @@ int whilestatement(FILE *IN) //循环语句
 }
 
 /*＜情况语句＞ ::= switch ‘(’＜表达式＞‘)’ ‘{’＜情况表＞[＜缺省＞] ‘}’*/
-int switchstatement(FILE *IN) //情况语句
+int switchstatement() //情况语句
 {
     printf("Switch statement:\n");
     fprintf(OUT,"Switch statement:\n");
     //sym此时为switch
-    sym=nextsym(IN);
+    sym=nextsym();
     {
         if(sym==lparent)//左括号
         {
-			sym=nextsym(IN);
-            expression(IN);
+			sym=nextsym();
+            expression();
             if(sym==rparent)//右括号
             {
-                sym=nextsym(IN);
+                sym=nextsym();
                 if(sym==lbrace)//左花括号
                 {
-                    sym=nextsym(IN);
+                    sym=nextsym();
                     if(sym==casesym){//case
-                        casestatement(IN);
+                        casestatement();
                         if(sym==rbrace)//右花括号
                         {
-                            sym=nextsym(IN);
+                            sym=nextsym();
                             return;
                         }
                         else
@@ -635,27 +635,27 @@ int switchstatement(FILE *IN) //情况语句
 }
 
 /*＜情况子语句＞  ::=  case＜常量＞：＜语句＞*/
-int casestatement(FILE *IN) //情况子语句
+int casestatement() //情况子语句
 {
     //sym此时为case
     while(1)
     {
-        sym=nextsym(IN);
+        sym=nextsym();
         if(sym==sinquo||sym==inttype||sym==numtype)//单引号括起来的字母或数字，或者整数
         {
-            if(constforcase(IN)==1){//常量
+            if(constforcase()==1){//常量
                 printf("Case statement\n");
                 fprintf(OUT,"Case statement\n");
             }
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==colon)//冒号
             {
-                sym=nextsym(IN);
-                statement(IN);//语句 可能返回右花括号、case、default
+                sym=nextsym();
+                statement();//语句 可能返回右花括号、case、default
                 if(sym==casesym)//下一个case
                     continue;
                 else if(sym==defaultsym){//default
-                    defaultstatement(IN);
+                    defaultstatement();
                     return;
                 }
                 else if (sym==rbrace)//右花括号
@@ -666,23 +666,23 @@ int casestatement(FILE *IN) //情况子语句
 }
 
 /*＜缺省＞ ::=  default : ＜语句＞*/
-int defaultstatement(FILE *IN) //缺省
+int defaultstatement() //缺省
 {
     printf("Default statement\n");
     fprintf(OUT,"Default statement\n");
     //sym此时为default
-    sym=nextsym(IN);
+    sym=nextsym();
     {
         if(sym==colon)//冒号
         {
-            sym=nextsym(IN);
-            statement(IN);//语句
+            sym=nextsym();
+            statement();//语句
         }
     }
 }
 
 /*＜有返回值函数调用语句＞ ::= ＜标识符＞‘(’＜值参数表＞‘)’|<标识符>*/
-int retfuncuse(FILE *IN) //有返回值函数调用语句
+int retfuncuse() //有返回值函数调用语句
 {
     printf("Return funcuse\n");
     fprintf(OUT,"Return funcuse\n");
@@ -691,8 +691,8 @@ int retfuncuse(FILE *IN) //有返回值函数调用语句
         return;
     else if(sym==lparent)
     {
-        sym=nextsym(IN);
-        valuepara(IN);//值参数表
+        sym=nextsym();
+        valuepara();//值参数表
         if(sym==rparent)//右括号
             return;
     }
@@ -700,7 +700,7 @@ int retfuncuse(FILE *IN) //有返回值函数调用语句
 }
 
 /*＜无返回值函数调用语句＞ ::= ＜标识符＞‘(’＜值参数表＞‘)’|<标识符>*/
-int voidfuncuse(FILE *IN) //无返回值函数调用语句
+int voidfuncuse() //无返回值函数调用语句
 {
     printf("Void funcuse\n");
     fprintf(OUT,"Void funcuse\n");
@@ -708,8 +708,8 @@ int voidfuncuse(FILE *IN) //无返回值函数调用语句
         return;
     else if(sym==lparent)
     {
-        sym=nextsym(IN);
-        valuepara(IN);//值参数表
+        sym=nextsym();
+        valuepara();//值参数表
         if(sym==rparent)//右括号
             return;
     }
@@ -717,16 +717,16 @@ int voidfuncuse(FILE *IN) //无返回值函数调用语句
 }
 
 /*＜值参数表＞   ::= ＜表达式＞{,＜表达式＞}*/
-int valuepara(FILE *IN) //值参数表
+int valuepara() //值参数表
 {
     printf("\tValue Parameters\n");
     fprintf(OUT,"\tValue Parameters\n");
     while(sym!=rparent)
     {
-        expression(IN);
+        expression();
         if(sym==comma)
         {
-             sym=nextsym(IN);
+             sym=nextsym();
              continue;
         }
     }
@@ -734,24 +734,24 @@ int valuepara(FILE *IN) //值参数表
 }
 
 /*＜读语句＞ ::=  scanf ‘(’＜标识符＞{,＜标识符＞}‘)’*/
-int readstatement(FILE *IN) //读语句
+int readstatement() //读语句
 {
     printf("Read statement\n");
     fprintf(OUT,"Read statement\n");
     //sym此时为scanf
-    sym=nextsym(IN);
+    sym=nextsym();
     if(sym==lparent)//左括号
     {
         while(1)
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==identsym||sym==chartype)//标识符
             {
-                sym=nextsym(IN);
+                sym=nextsym();
                 if(sym==comma)//下一个标识符
                     continue;
                 else{//右括号
-                    sym=nextsym(IN);//分号
+                    sym=nextsym();//分号
                     return;
                 }
             }
@@ -761,41 +761,41 @@ int readstatement(FILE *IN) //读语句
 
 /*＜写语句＞ ::= printf ‘(’ ＜字符串＞,＜表达式＞ ‘)’
                | printf ‘(’＜字符串＞ ‘)’| printf ‘(’＜表达式＞‘)’*/
-int writestatement(FILE *IN) //写语句
+int writestatement() //写语句
 {
     printf("Write statement\n");
     fprintf(OUT,"Write statement\n");
     //sym此时为printf
-    sym=nextsym(IN);
+    sym=nextsym();
     if(sym==lparent)//左括号
     {
-        sym=nextsym(IN);
+        sym=nextsym();
         if(sym==douquo)//双引号，字符串
         {
-            strings(IN);
-            sym=nextsym(IN);
+            strings();
+            sym=nextsym();
             if(sym==comma)//逗号，字符串后有表达式
             {
-				sym=nextsym(IN);
-                expression(IN);
+				sym=nextsym();
+                expression();
                 if(sym==rparent)//右括号
                 {
-                    sym=nextsym(IN);//分号
+                    sym=nextsym();//分号
                     return;
                 }
             }
             else if(sym==rparent)//右括号
             {
-                sym=nextsym(IN);//分号
+                sym=nextsym();//分号
                 return;
             }
         }
         else//表达式
         {
-            expression(IN);
+            expression();
             if(sym==rparent)//右括号
             {
-                sym=nextsym(IN);//分号
+                sym=nextsym();//分号
                 return;
             }
         }
@@ -803,19 +803,19 @@ int writestatement(FILE *IN) //写语句
 }
 
 /*＜返回语句＞ ::=  return[‘(’＜表达式＞‘)’] */
-int returnstatement(FILE *IN) //返回语句
+int returnstatement() //返回语句
 {
     printf("Return statement\n");
     fprintf(OUT,"Return statement\n");
-    sym=nextsym(IN);
+    sym=nextsym();
     //sym此时为return
     if(sym==lparent)//左括号
     {
-		sym=nextsym(IN);
-        expression(IN);
+		sym=nextsym();
+        expression();
         {
             if(sym==rparent){//右括号
-                sym=nextsym(IN);
+                sym=nextsym();
                 return;
             }
         }
@@ -827,14 +827,14 @@ int returnstatement(FILE *IN) //返回语句
 
 /*＜常量＞ ::=  ＜整数＞|＜字符＞
   ＜字符＞ ::='＜加法运算符＞'｜'＜乘法运算符＞'｜'＜字母＞'｜'＜数字＞'*/
-int constant(FILE *IN)
+int constant()
 {
     //sym此时为单引号或者整数
     if(sym==sinquo){//单引号
-        sym=nextsym(IN);
+        sym=nextsym();
         if((sym>=add&&sym<=divi)||sym==chartype||sym==underline||sym==numtype)
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==sinquo)//单引号
                 return 1;
             else{
@@ -843,7 +843,7 @@ int constant(FILE *IN)
             }
         }
         else{
-            sym=nextsym(IN);//单引号
+            sym=nextsym();//单引号
             return 0;
         }
     }
@@ -851,7 +851,7 @@ int constant(FILE *IN)
         return 1;
     else if(sym==add||sym==sub)//加号或减号
     {
-        sym=nextsym(IN);
+        sym=nextsym();
         if(sym==inttype||sym==numtype)
             return 1;
     }
@@ -859,14 +859,14 @@ int constant(FILE *IN)
 }
 
 /*情况语句中，switch后面的表达式和case后面的常量只允许出现int和char类型*/
-int constforcase(FILE *IN)
+int constforcase()
 {
     //sym此时为单引号或者整数
     if(sym==sinquo){//单引号
-        sym=nextsym(IN);
+        sym=nextsym();
         if(sym==chartype||sym==numtype)
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==sinquo)//单引号
                 return 1;
             else{
@@ -875,7 +875,7 @@ int constforcase(FILE *IN)
             }
         }
         else{
-            sym=nextsym(IN);//单引号
+            sym=nextsym();//单引号
             return 0;
         }
     }
@@ -883,23 +883,23 @@ int constforcase(FILE *IN)
         return 1;
     else if(sym==add||sym==sub)//加号或减号
     {
-        sym=nextsym(IN);
+        sym=nextsym();
         if(sym==inttype||sym==numtype)
             return 1;
     }
     return 0;
 }
 /*＜字符串＞ ::=  "｛十进制编码为32,33,35-126的ASCII字符｝"*/
-int strings(FILE *IN)
+int strings()
 {
     printf("\tString\n");
     fprintf(OUT,"\tString\n");
     //sym此时为双引号
-    sym=nextsym(IN);
+    sym=nextsym();
     while(sym!=douquo)
     {
         if(sym>=constsym&&sym<=underline)
-            sym=nextsym(IN);
+            sym=nextsym();
         else
             return;
     }
@@ -907,17 +907,17 @@ int strings(FILE *IN)
 }
 
 /*＜表达式＞ ::= ［+｜-］＜项＞{＜加法运算符＞＜项＞}*/
-int expression(FILE *IN)//表达式
+int expression()//表达式
 {
     printf("\tExpression begin\n");
     fprintf(OUT,"\tExpression begin\n");
     if(sym==add||sym==sub)
-        sym=nextsym(IN);
+        sym=nextsym();
     while(1)
     {
-        item(IN);
+        item();
         if(sym==add||sym==sub){
-            sym=nextsym(IN);
+            sym=nextsym();
             continue;
         }
         else {
@@ -929,15 +929,15 @@ int expression(FILE *IN)//表达式
 }
 
 /*＜项＞ ::= ＜因子＞{＜乘法运算符＞＜因子＞}*/
-int item(FILE *IN) //项
+int item() //项
 {
     printf("\tItem\n");
     fprintf(OUT,"\tItem\n");
     while(1)
     {
-        factor(IN);
+        factor();
         if(sym==mult||sym==divi){
-            sym=nextsym(IN);
+            sym=nextsym();
             continue;
         }
         else return;
@@ -946,7 +946,7 @@ int item(FILE *IN) //项
 
 /*＜因子＞::= ＜标识符＞｜＜标识符＞‘[’＜表达式＞‘]’|
 ‘(’＜表达式＞‘)’｜＜整数＞|＜字符＞｜＜有返回值函数调用语句＞ */
-int factor(FILE *IN) //因子
+int factor() //因子
 {
     printf("\tFactor\n");
     fprintf(OUT,"\tFactor\n");
@@ -954,50 +954,50 @@ int factor(FILE *IN) //因子
     {
         case identsym:
         case chartype:
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==lbracket){//左方括号，数组
-                sym=nextsym(IN);
-                expression(IN);
+                sym=nextsym();
+                expression();
                 if(sym==rbracket){//右方括号
-                    sym=nextsym(IN);
+                    sym=nextsym();
                     return;
                 }
             }
             else if(sym==lparent)//左括号或分号，有返回值函数调用
             {
-                retfuncuse(IN);//返回右括号
-                sym=nextsym(IN);
+                retfuncuse();//返回右括号
+                sym=nextsym();
                 return;
             }
             else//标识符
                 return;
             break;
         case lparent://表达式
-            sym=nextsym(IN);
-            expression(IN);
+            sym=nextsym();
+            expression();
             if(sym==rparent){//右括号
-                sym=nextsym(IN);
+                sym=nextsym();
                 return;
             }
             break;
         case add:
         case sub://整数前正负号
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==inttype||sym==numtype){
-                sym=nextsym(IN);
+                sym=nextsym();
                 return;
             }
             break;
         case inttype:
         case numtype://整数
-            sym=nextsym(IN);
+            sym=nextsym();
             return;
         case sinquo://字符
-            sym=nextsym(IN);
+            sym=nextsym();
             if((sym>=add&&sym<=divi)||sym==chartype||sym==numtype){
-                sym=nextsym(IN);
+                sym=nextsym();
                 if(sym==sinquo){//单引号
-                    sym=nextsym(IN);
+                    sym=nextsym();
                     return;
                 }
             }
@@ -1007,7 +1007,7 @@ int factor(FILE *IN) //因子
 }
 
 //读下一个字符
-int nextsym(FILE *IN)
+int nextsym()
 {
     int t=0, i;
     memset(token, 0, sizeof(token)); //清空数组！
@@ -1118,10 +1118,10 @@ int nextsym(FILE *IN)
         {
             //跳过空白字符
             case '\n':
-                return nextsym(IN);
+                return nextsym();
             case ' ':
             case '\t':
-                if (blankflag==0) return nextsym(IN);
+                if (blankflag==0) return nextsym();
                 else return blank;
             case '+':
                 return add;
@@ -1175,7 +1175,6 @@ int nextsym(FILE *IN)
 
 int main()
 {
-	FILE *IN;
     char file_addr[100];
     char buffer[100];
     char temp;
@@ -1186,22 +1185,23 @@ int main()
         printf("NO SUCH FILE!\n");
     }
     else{
-        printf("Program begin:\n");
+        printf("Program begin:\n")
+		;
         fprintf(OUT,"Program begin:\n");
         while(!feof(IN))
         {
-            sym=nextsym(IN);
+            sym=nextsym();
             if(sym==constsym)
-                constdec(IN);
+                constdec();
             if(sym==intsym||sym==charsym)//类型标识符
-                differ(IN);
+                differ();
             if(sym==voidsym)
             {
-                sym=nextsym(IN);
+                sym=nextsym();
                 if(sym!=mainsym)//无返回值函数
-                    voidfuncdef(IN);
+                    voidfuncdef();
                 else //主函数
-                    mainfunc(IN);
+                    mainfunc();
             }
         }
         printf("Program end\n");
