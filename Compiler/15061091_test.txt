@@ -1,6 +1,6 @@
-const Int one = 1;
-const char ch = 'c';
-int s, sum;
+const Int one = 1, two = 2;
+const char ch = 'c', st = 's'; 
+int s, sum[10];
 void Getsum(int n)
 {
 	if(n>100);
@@ -21,11 +21,11 @@ int reverse(int n)
 	int na[100];
 	j=0;
 	if(n>100)
-		return -1;
+		return (-1);
 	else;
 	while(j<n)
 	{
-		na[n-1-j]=j+1£»
+		na[n-1-j]=j+1;
 		j=j+1;
 	}
 	printf("  SUM: ");
@@ -37,9 +37,9 @@ int reverse(int n)
 		j=j+1;
 	}
 	if(n/2*2==n)
-		return 1;
+		return (1);
 	else 
-		return 0;
+		return (0);
 }
 void main()
 {
