@@ -20,46 +20,46 @@ const enum symbol {constsym, intsym, charsym, voidsym, mainsym, ifsym, elsesym, 
 
 int No=1;
 int sym;
-int blankflag=0; //0-Ìø¹ı¿Õ¸ñ 1-²»Ìø¹ı¿Õ¸ñ
-int vardecbegflag=0;//1-±äÁ¿ÉùÃ÷¿ªÊ¼
-int vardecendflag=0;//1-±äÁ¿ÉùÃ÷½áÊø
+int blankflag=0; //0-è·³è¿‡ç©ºæ ¼ 1-ä¸è·³è¿‡ç©ºæ ¼
+int vardecbegflag=0;//1-å˜é‡å£°æ˜å¼€å§‹
+int vardecendflag=1;//1-å˜é‡å£°æ˜ç»“æŸ
 int braceflag=0;
-char ch; //×Ö·û
-char token[100]; //×Ö·û´®
+char ch; //å­—ç¬¦
+char token[100]; //å­—ç¬¦ä¸²
 
 int nextsym();
-int constdec();//³£Á¿ËµÃ÷
-int constdef();//³£Á¿¶¨Òå
-int vardec();//³£Á¿ËµÃ÷
-int vardef(); //±äÁ¿¶¨Òå
+int constdec();//å¸¸é‡è¯´æ˜
+int constdef();//å¸¸é‡å®šä¹‰
+int vardec();//å¸¸é‡è¯´æ˜
+int vardef(); //å˜é‡å®šä¹‰
 int differ();
-int retfuncdef(); //ÓĞ·µ»ØÖµº¯Êı¶¨Òå
-int voidfuncdef(); //ÎŞ·µ»ØÖµº¯Êı¶¨Òå
-int parameters(); //²ÎÊı
-int mainfunc(); //Ö÷º¯Êı
-int expression(); //±í´ïÊ½
-int item(); //Ïî
-int factor(); //Òò×Ó
-int statements(); //¸´ºÏÓï¾ä
-int statement();//Óï¾ä
-int assignstatement(); //¸³ÖµÓï¾ä
-int ifstatement(); //Ìõ¼şÓï¾ä
-int condition();//Ìõ¼ş
-int whilestatement(); //Ñ­»·Óï¾ä
-int switchstatement(); //Çé¿öÓï¾ä
-int casestatement(); //Çé¿ö×ÓÓï¾ä
-int defaultstatement(); //È±Ê¡
-int retfuncuse(); //ÓĞ·µ»ØÖµº¯Êıµ÷ÓÃÓï¾ä
-int voidfuncuse(); //ÎŞ·µ»ØÖµº¯Êıµ÷ÓÃÓï¾ä
-int valuepara(); //Öµ²ÎÊı±í
-int readstatement(); //¶ÁÓï¾ä
-int writestatement(); //Ğ´Óï¾ä
-int returnstatement(); //·µ»ØÓï¾ä
-int constant();//³£Á¿
+int retfuncdef(); //æœ‰è¿”å›å€¼å‡½æ•°å®šä¹‰
+int voidfuncdef(); //æ— è¿”å›å€¼å‡½æ•°å®šä¹‰
+int parameters(); //å‚æ•°
+int mainfunc(); //ä¸»å‡½æ•°
+int expression(); //è¡¨è¾¾å¼
+int item(); //é¡¹
+int factor(); //å› å­
+int statements(); //å¤åˆè¯­å¥
+int statement();//è¯­å¥
+int assignstatement(); //èµ‹å€¼è¯­å¥
+int ifstatement(); //æ¡ä»¶è¯­å¥
+int condition();//æ¡ä»¶
+int whilestatement(); //å¾ªç¯è¯­å¥
+int switchstatement(); //æƒ…å†µè¯­å¥
+int casestatement(); //æƒ…å†µå­è¯­å¥
+int defaultstatement(); //ç¼ºçœ
+int retfuncuse(); //æœ‰è¿”å›å€¼å‡½æ•°è°ƒç”¨è¯­å¥
+int voidfuncuse(); //æ— è¿”å›å€¼å‡½æ•°è°ƒç”¨è¯­å¥
+int valuepara(); //å€¼å‚æ•°è¡¨
+int readstatement(); //è¯»è¯­å¥
+int writestatement(); //å†™è¯­å¥
+int returnstatement(); //è¿”å›è¯­å¥
+int constant();//å¸¸é‡
 int constforcase();
-int strings();//×Ö·û´®
+int strings();//å­—ç¬¦ä¸²
 
-/*£¼³£Á¿ËµÃ÷£¾ ::=  const£¼³£Á¿¶¨Òå£¾;{ const£¼³£Á¿¶¨Òå£¾;}*/
+/*ï¼œå¸¸é‡è¯´æ˜ï¼ ::=  constï¼œå¸¸é‡å®šä¹‰ï¼;{ constï¼œå¸¸é‡å®šä¹‰ï¼;}*/
 int constdec(FILE *IN)
 {
     printf("Constdec begin:\n");
@@ -68,11 +68,11 @@ int constdec(FILE *IN)
         constdef(IN);
         //sym=nextsym(IN);
         //printf("1%d\n",sym);
-        if(sym==semicolon)//·ÖºÅ
+        if(sym==semicolon)//åˆ†å·
         {
             sym=nextsym(IN);
             //printf("2%d\n",sym);
-            if(sym==constsym)//ÏÂÒ»¸ö³£Á¿ËµÃ÷
+            if(sym==constsym)//ä¸‹ä¸€ä¸ªå¸¸é‡è¯´æ˜
                 continue;
             else
             {
@@ -84,8 +84,8 @@ int constdec(FILE *IN)
     }
 }
 
-/*£¼³£Á¿¶¨Òå£¾   ::=   int£¼±êÊ¶·û£¾£½£¼ÕûÊı£¾{,£¼±êÊ¶·û£¾£½£¼ÕûÊı£¾}
-                    | char£¼±êÊ¶·û£¾£½£¼×Ö·û£¾{,£¼±êÊ¶·û£¾£½£¼×Ö·û£¾}*/
+/*ï¼œå¸¸é‡å®šä¹‰ï¼   ::=   intï¼œæ ‡è¯†ç¬¦ï¼ï¼ï¼œæ•´æ•°ï¼{,ï¼œæ ‡è¯†ç¬¦ï¼ï¼ï¼œæ•´æ•°ï¼}
+                    | charï¼œæ ‡è¯†ç¬¦ï¼ï¼ï¼œå­—ç¬¦ï¼{,ï¼œæ ‡è¯†ç¬¦ï¼ï¼ï¼œå­—ç¬¦ï¼}*/
 int constdef(FILE *IN)
 {
     printf("\tConstdef\n");
@@ -94,19 +94,21 @@ int constdef(FILE *IN)
         while(1)
         {
             sym=nextsym(IN);
-            if(sym==identsym||sym==chartype)//±êÊ¶·û
+            if(sym==identsym||sym==chartype)//æ ‡è¯†ç¬¦
             {
-                //µÇÂ¼·ûºÅ±í
+                //ç™»å½•ç¬¦å·è¡¨
                 sym=nextsym(IN);
-                if(sym==equmark)//µÈºÅ
+                if(sym==equmark)//ç­‰å·
                 {
                     sym=nextsym(IN);
-                    if(sym==inttype||sym==numtype)//ÕûÊı
+                    if(sym==add||sym==sub)
+                        sym=nextsym(IN);
+                    if(sym==inttype||sym==numtype)//æ•´æ•°
                     {
                         sym=nextsym(IN);
-                        if(sym==comma)//¶ººÅ
+                        if(sym==comma)//é€—å·
                             continue;
-                        else//·ÖºÅ
+                        else//åˆ†å·
                         {
                            // printf("\tConstdef end\n");
                             return;
@@ -120,26 +122,26 @@ int constdef(FILE *IN)
         while(1)
         {
             sym=nextsym(IN);
-            if(sym==identsym||sym==chartype)//±êÊ¶·û
+            if(sym==identsym||sym==chartype)//æ ‡è¯†ç¬¦
             {
-                //µÇÂ¼·ûºÅ±í
+                //ç™»å½•ç¬¦å·è¡¨
                 sym=nextsym(IN);
-                if(sym==equmark)//µÈºÅ
+                if(sym==equmark)//ç­‰å·
                 {
                     sym=nextsym(IN);
-                    if(sym==sinquo)//µ¥ÒıºÅ
+                    if(sym==sinquo)//å•å¼•å·
                     {
                         sym=nextsym(IN);
                         if(sym==chartype||sym==numtype||
-                           (sym>=add&&sym<=divi))//×Ö·û
+                           (sym>=add&&sym<=divi)||sym==underline)//å­—ç¬¦
                         {
                             sym=nextsym(IN);
-                            if(sym==sinquo)//µ¥ÒıºÅ
+                            if(sym==sinquo)//å•å¼•å·
                             {
                                 sym=nextsym(IN);
-                                if(sym==comma)//¶ººÅ
+                                if(sym==comma)//é€—å·
                                     continue;
-                                else//·ÖºÅ
+                                else//åˆ†å·
                                 {
                                     //printf("\tConstdef end\n");
                                     return;
@@ -153,21 +155,22 @@ int constdef(FILE *IN)
     }
 }
 
-/*£¼±äÁ¿ËµÃ÷£¾  ::= £¼±äÁ¿¶¨Òå£¾;{£¼±äÁ¿¶¨Òå£¾;}*/
+/*ï¼œå˜é‡è¯´æ˜ï¼  ::= ï¼œå˜é‡å®šä¹‰ï¼;{ï¼œå˜é‡å®šä¹‰ï¼;}*/
 int vardec(FILE *IN)
 {
     if(vardecbegflag==0){
         printf("Vardec begin:\n");
         vardecbegflag=1;
+        vardecendflag=0;
     }
     while(1)
     {
-        //symÊÇ×ó·½À¨ºÅ»òÕß¶ººÅ»òÕß·ÖºÅ
+        //symæ˜¯å·¦æ–¹æ‹¬å·æˆ–è€…é€—å·æˆ–è€…åˆ†å·
         vardef(IN);
-        if(sym==semicolon)//·ÖºÅ
+        if(sym==semicolon)//åˆ†å·
         {
             sym=nextsym(IN);
-            if(sym==intsym||sym==charsym)//ÏÂÒ»¸ö±äÁ¿ËµÃ÷»òÕßº¯Êı¶¨Òå
+            if(sym==intsym||sym==charsym)//ä¸‹ä¸€ä¸ªå˜é‡è¯´æ˜æˆ–è€…å‡½æ•°å®šä¹‰
                 return;
             else
             {
@@ -183,34 +186,34 @@ int vardec(FILE *IN)
     }
 }
 
-/*£¼±äÁ¿¶¨Òå£¾  ::= £¼ÀàĞÍ±êÊ¶·û£¾(£¼±êÊ¶·û£¾|£¼±êÊ¶·û£¾¡®[¡¯£¼ÎŞ·ûºÅÕûÊı£¾¡®]¡¯){,(£¼±êÊ¶·û£¾|£¼±êÊ¶·û£¾¡®[¡¯£¼ÎŞ·ûºÅÕûÊı£¾¡®]¡¯ )}  */
+/*ï¼œå˜é‡å®šä¹‰ï¼  ::= ï¼œç±»å‹æ ‡è¯†ç¬¦ï¼(ï¼œæ ‡è¯†ç¬¦ï¼|ï¼œæ ‡è¯†ç¬¦ï¼â€˜[â€™ï¼œæ— ç¬¦å·æ•´æ•°ï¼â€˜]â€™){,(ï¼œæ ‡è¯†ç¬¦ï¼|ï¼œæ ‡è¯†ç¬¦ï¼â€˜[â€™ï¼œæ— ç¬¦å·æ•´æ•°ï¼â€˜]â€™ )}  */
 int vardef(FILE *IN)
 {
     printf("\tVardef\n");
     while(1)
     {
-        //symÊÇ×ó·½À¨ºÅ»òÕß¶ººÅ»òÕß·ÖºÅ
+        //symæ˜¯å·¦æ–¹æ‹¬å·æˆ–è€…é€—å·æˆ–è€…åˆ†å·
         if(sym==semicolon)
         {
             //printf("\tVardef end\n");
             return;
         }
         sym=nextsym(IN);
-        if(sym==identsym||sym==chartype)//±êÊ¶·û
+        if(sym==identsym||sym==chartype)//æ ‡è¯†ç¬¦
         {
             sym=nextsym(IN);
-            if(sym==lbracket)//×ó·½À¨ºÅ£¬ÊÇÊı×é
+            if(sym==lbracket)//å·¦æ–¹æ‹¬å·ï¼Œæ˜¯æ•°ç»„
             {
                 sym=nextsym(IN);
-                if(sym==inttype||sym==numtype)//ÎŞ·ûºÅÕûÊı
+                if(sym==inttype||sym==numtype)//æ— ç¬¦å·æ•´æ•°
                 {
                     sym=nextsym(IN);
-                    if(sym==rbracket)//ÓÒ·½À¨ºÅ
+                    if(sym==rbracket)//å³æ–¹æ‹¬å·
                     {
                         sym=nextsym(IN);
-                        if(sym==comma)//¶ººÅ
+                        if(sym==comma)//é€—å·
                             continue;
-                        else//·ÖºÅ
+                        else//åˆ†å·
                         {
                             //printf("\tVardef end\n");
                             return;
@@ -218,7 +221,7 @@ int vardef(FILE *IN)
                     }
                 }
             }
-            else if(sym==comma)//¶ººÅ
+            else if(sym==comma)//é€—å·
                 continue;
             else
             {
@@ -226,15 +229,15 @@ int vardef(FILE *IN)
                 return;
             }
         }
-        else if(sym==inttype||sym==numtype)//ÎŞ·ûºÅÕûÊı
+        else if(sym==inttype||sym==numtype)//æ— ç¬¦å·æ•´æ•°
         {
             sym=nextsym(IN);
-            if(sym==rbracket)//ÓÒ·½À¨ºÅ
+            if(sym==rbracket)//å³æ–¹æ‹¬å·
             {
                 sym=nextsym(IN);
-                if(sym==comma)//¶ººÅ
+                if(sym==comma)//é€—å·
                     continue;
-                else//·ÖºÅ
+                else//åˆ†å·
                 {
                     //printf("\tVardef end\n");
                     return;
@@ -244,16 +247,16 @@ int vardef(FILE *IN)
     }
 }
 
-/*Çø·Ö±äÁ¿ÉùÃ÷ºÍÓĞ·µ»ØÖµº¯Êı¶¨Òå*/
+/*åŒºåˆ†å˜é‡å£°æ˜å’Œæœ‰è¿”å›å€¼å‡½æ•°å®šä¹‰*/
 int differ(FILE *IN)
 {
-    //¶Áµ½ÁËÀàĞÍ±êÊ¶·û
+    //è¯»åˆ°äº†ç±»å‹æ ‡è¯†ç¬¦
     while(1){
         sym=nextsym(IN);
-        if(sym==identsym||sym==chartype)//±êÊ¶·û
+        if(sym==identsym||sym==chartype)//æ ‡è¯†ç¬¦
         {
             sym=nextsym(IN);
-            if(sym==lbracket||sym==comma||sym==semicolon)//×ó·½À¨ºÅ»ò¶ººÅ»ò·ÖºÅ
+            if(sym==lbracket||sym==comma||sym==semicolon)//å·¦æ–¹æ‹¬å·æˆ–é€—å·æˆ–åˆ†å·
             {
                 vardec(IN);
             }
@@ -264,7 +267,7 @@ int differ(FILE *IN)
                     printf("Vardec end\n");
                     vardecendflag=1;
                 }
-                if (sym==lbrace||sym==lparent)//×ó»¨À¨ºÅ»ò×óÀ¨ºÅ
+                if (sym==lbrace||sym==lparent)//å·¦èŠ±æ‹¬å·æˆ–å·¦æ‹¬å·
                 {
                     retfuncdef(IN);
                 }
@@ -281,34 +284,33 @@ int differ(FILE *IN)
     }
 }
 
-/*£¼ÓĞ·µ»ØÖµº¯Êı¶¨Òå£¾  ::=  £¼ÉùÃ÷Í·²¿£¾¡®(¡¯£¼²ÎÊı£¾¡®)¡¯ ¡®{¡¯£¼¸´ºÏÓï¾ä£¾¡®}¡¯
-                            |£¼ÉùÃ÷Í·²¿£¾¡®{¡¯£¼¸´ºÏÓï¾ä£¾¡®}¡¯ */
+/*ï¼œæœ‰è¿”å›å€¼å‡½æ•°å®šä¹‰ï¼  ::=  ï¼œå£°æ˜å¤´éƒ¨ï¼â€˜(â€™ï¼œå‚æ•°ï¼â€˜)â€™ â€˜{â€™ï¼œå¤åˆè¯­å¥ï¼â€˜}â€™
+                            |ï¼œå£°æ˜å¤´éƒ¨ï¼â€˜{â€™ï¼œå¤åˆè¯­å¥ï¼â€˜}â€™ */
 int retfuncdef(FILE *IN)
 {
     while(1){
         printf("Return funcdef begin:\n");
-        if(sym==lbrace)//×ó»¨À¨ºÅ
+        if(sym==lbrace)//å·¦èŠ±æ‹¬å·
         {
             sym=nextsym(IN);
-            statements(IN);//¸´ºÏÓï¾ä
-            if(sym==rbrace)//ÓÒ»¨À¨ºÅ
+            statements(IN);//å¤åˆè¯­å¥
+            if(sym==rbrace)//å³èŠ±æ‹¬å·
             {
                 printf("Return fundef end:\n");
                 return;
             }
         }
-        else if(sym==lparent)//×óÀ¨ºÅ
+        else if(sym==lparent)//å·¦æ‹¬å·
         {
-            parameters(IN);//²ÎÊı
-            sym=nextsym(IN);
-            if(sym==rparent)//ÓÒÀ¨ºÅ
+            parameters(IN);//å‚æ•°
+            if(sym==rparent)//å³æ‹¬å·
             {
                 sym=nextsym(IN);
-                if(sym==lbrace)//×ó»¨À¨ºÅ
+                if(sym==lbrace)//å·¦èŠ±æ‹¬å·
                 {
                     sym=nextsym(IN);
-                    statements(IN);//¸´ºÏÓï¾ä
-                    if(sym==rbrace)//ÓÒ»¨À¨ºÅ
+                    statements(IN);//å¤åˆè¯­å¥
+                    if(sym==rbrace)//å³èŠ±æ‹¬å·
                     {
                         printf("Return fundef end:\n");
                         return;
@@ -319,29 +321,28 @@ int retfuncdef(FILE *IN)
     }
 }
 
-/*£¼ÎŞ·µ»ØÖµº¯Êı¶¨Òå£¾  ::= void£¼±êÊ¶·û£¾(¡¯£¼²ÎÊı£¾¡®)¡¯¡®{¡¯£¼¸´ºÏÓï¾ä£¾¡®}¡¯
-                          | void£¼±êÊ¶·û£¾{¡¯£¼¸´ºÏÓï¾ä£¾¡®}¡¯*/
+/*ï¼œæ— è¿”å›å€¼å‡½æ•°å®šä¹‰ï¼  ::= voidï¼œæ ‡è¯†ç¬¦ï¼(â€™ï¼œå‚æ•°ï¼â€˜)â€™â€˜{â€™ï¼œå¤åˆè¯­å¥ï¼â€˜}â€™
+                          | voidï¼œæ ‡è¯†ç¬¦ï¼{â€™ï¼œå¤åˆè¯­å¥ï¼â€˜}â€™*/
 int voidfuncdef(FILE *IN)
 {
-    //symÊÇ±êÊ¶·û
+    //symæ˜¯æ ‡è¯†ç¬¦
     printf("Void fundef begin:\n");
     while(1)
     {
-        if(sym==identsym||sym==chartype)//±êÊ¶·û
+        if(sym==identsym||sym==chartype)//æ ‡è¯†ç¬¦
         {
             sym=nextsym(IN);
-            if(sym==lparent)//×óÀ¨ºÅ
+            if(sym==lparent)//å·¦æ‹¬å·
             {
-                parameters(IN);//²ÎÊı
-                sym=nextsym(IN);
-                if(sym==rparent)//ÓÒÀ¨ºÅ
+                parameters(IN);//å‚æ•°
+                if(sym==rparent)//å³æ‹¬å·
                 {
                     sym=nextsym(IN);
-                    if(sym==lbrace)//×ó»¨À¨ºÅ
+                    if(sym==lbrace)//å·¦èŠ±æ‹¬å·
                     {
                         sym=nextsym(IN);
-                        statements(IN);//Óï¾ä
-                        if(sym==rbrace)//ÓÒ»¨À¨ºÅ
+                        statements(IN);//è¯­å¥
+                        if(sym==rbrace)//å³èŠ±æ‹¬å·
                         {
                             printf("Void fundef end:\n");
                             return;
@@ -349,11 +350,11 @@ int voidfuncdef(FILE *IN)
                     }
                 }
             }
-            else if(sym==lbrace)//×ó»¨À¨ºÅ
+            else if(sym==lbrace)//å·¦èŠ±æ‹¬å·
             {
                 sym=nextsym(IN);
-                statements(IN);//¸´ºÏÓï¾ä
-                if(sym==rbrace)//ÓÒ»¨À¨ºÅ
+                statements(IN);//å¤åˆè¯­å¥
+                if(sym==rbrace)//å³èŠ±æ‹¬å·
                 {
                     printf("Void fundef end:\n");
                     return;
@@ -363,26 +364,46 @@ int voidfuncdef(FILE *IN)
     }
 }
 
-/*£¼Ö÷º¯Êı£¾  ::= void main¡®(¡¯¡®)¡¯¡®{¡¯£¼¸´ºÏÓï¾ä£¾¡®}¡¯ */
-int mainfunc(FILE *IN)
+/*ï¼œå‚æ•°è¡¨ï¼Â Â ::=Â Â ï¼œç±»å‹æ ‡è¯†ç¬¦ï¼ï¼œæ ‡è¯†ç¬¦ï¼{,ï¼œç±»å‹æ ‡è¯†ç¬¦ï¼ï¼œæ ‡è¯†ç¬¦ï¼}*/
+int parameters(FILE *IN)//å‚æ•°è¡¨
 {
-    //symÏÖÔÚÊÇmain
-    printf("Mainfunc begin:\n");
-    sym=nextsym(IN);
-    if(sym==lparent)//×óÀ¨ºÅ
+    printf("\tParameters\n");
+    //symæ­¤æ—¶ä¸ºå·¦æ‹¬å·
+    while(sym!=rparent)
     {
         sym=nextsym(IN);
-        if(sym==rparent)//ÓÒÀ¨ºÅ
+        if(sym==intsym||sym==charsym)//ç±»å‹æ ‡è¯†ç¬¦
+        {
+            sym=nextsym(IN);
+            if(sym==identsym||sym==charsym)//æ ‡è¯†ç¬¦
+            {
+                continue;
+            }
+        }
+    }
+    return;//è¿”å›æ—¶symä¸ºå³æ‹¬å·
+}
+
+/*ï¼œä¸»å‡½æ•°ï¼  ::= void mainâ€˜(â€™â€˜)â€™â€˜{â€™ï¼œå¤åˆè¯­å¥ï¼â€˜}â€™ */
+int mainfunc(FILE *IN)
+{
+    //symç°åœ¨æ˜¯main
+    printf("Mainfunc begin:\n");
+    sym=nextsym(IN);
+    if(sym==lparent)//å·¦æ‹¬å·
+    {
+        sym=nextsym(IN);
+        if(sym==rparent)//å³æ‹¬å·
         {
             sym=nextsym(IN);
             //printf("%d\n",sym);
-            if(sym==lbrace)//×ó»¨À¨ºÅ
+            if(sym==lbrace)//å·¦èŠ±æ‹¬å·
             {
                 sym=nextsym(IN);
-                statements(IN);//¸´ºÏÓï¾ä
+                statements(IN);//å¤åˆè¯­å¥
                 //printf("%d\n",sym);
                 //sym=nextsym(IN);
-                if(sym==rbrace)//ÓÒ»¨À¨ºÅ
+                if(sym==rbrace)//å³èŠ±æ‹¬å·
                 {
                     printf("Mainfunc end\n");
                     return;
@@ -392,24 +413,24 @@ int mainfunc(FILE *IN)
     }
 }
 
-/*£¼¸´ºÏÓï¾ä£¾   ::=  £Û£¼³£Á¿ËµÃ÷£¾£İ£Û£¼±äÁ¿ËµÃ÷£¾£İ£û£¼Óï¾ä£¾£ı*/
+/*ï¼œå¤åˆè¯­å¥ï¼   ::=  ï¼»ï¼œå¸¸é‡è¯´æ˜ï¼ï¼½ï¼»ï¼œå˜é‡è¯´æ˜ï¼ï¼½ï½›ï¼œè¯­å¥ï¼ï½*/
 int statements(FILE *IN)
 {
     printf("Statements begin:\n");
-    //while(sym!=rbrace)//²»ÊÇÓÒ»¨À¨ºÅ
+    //while(sym!=rbrace)//ä¸æ˜¯å³èŠ±æ‹¬å·
     //{
     vardecbegflag=0;
-    vardecendflag=0;
-    //³£Á¿ÉùÃ÷
+    vardecendflag=1;
+    //å¸¸é‡å£°æ˜
     if(sym==constsym){
         constdec(IN);
     }
-    //±äÁ¿ÉùÃ÷
+    //å˜é‡å£°æ˜
     //printf("%d\n",sym);
-    if(sym==intsym||sym==charsym)//ÀàĞÍ±êÊ¶·û
+    if(sym==intsym||sym==charsym)//ç±»å‹æ ‡è¯†ç¬¦
         differ(IN);
     //}
-    //Óï¾ä
+    //è¯­å¥
     statement(IN);
     printf("Statements end\n");
     if(sym==rbrace) return;
@@ -417,10 +438,10 @@ int statements(FILE *IN)
     return;
 }
 
-/*£¼Óï¾ä£¾ ::= £¼Ìõ¼şÓï¾ä£¾£ü£¼Ñ­»·Óï¾ä£¾| ¡®{¡¯£û£¼Óï¾ä£¾£ı¡®}¡¯
-            £ü£¼ÓĞ·µ»ØÖµº¯Êıµ÷ÓÃÓï¾ä£¾; |£¼ÎŞ·µ»ØÖµº¯Êıµ÷ÓÃÓï¾ä£¾;
-            £ü£¼¸³ÖµÓï¾ä£¾;£ü£¼¶ÁÓï¾ä£¾;£ü£¼Ğ´Óï¾ä£¾;£ü£¼¿Õ£¾;
-            |£¼Çé¿öÓï¾ä£¾£ü£¼·µ»ØÓï¾ä£¾*/
+/*ï¼œè¯­å¥ï¼ ::= ï¼œæ¡ä»¶è¯­å¥ï¼ï½œï¼œå¾ªç¯è¯­å¥ï¼| â€˜{â€™ï½›ï¼œè¯­å¥ï¼ï½â€˜}â€™
+            ï½œï¼œæœ‰è¿”å›å€¼å‡½æ•°è°ƒç”¨è¯­å¥ï¼; |ï¼œæ— è¿”å›å€¼å‡½æ•°è°ƒç”¨è¯­å¥ï¼;
+            ï½œï¼œèµ‹å€¼è¯­å¥ï¼;ï½œï¼œè¯»è¯­å¥ï¼;ï½œï¼œå†™è¯­å¥ï¼;ï½œï¼œç©ºï¼;
+            |ï¼œæƒ…å†µè¯­å¥ï¼ï½œï¼œè¿”å›è¯­å¥ï¼*/
 int statement(FILE *IN)
 {
     //printf("%d\n",sym);
@@ -432,7 +453,7 @@ int statement(FILE *IN)
                 return;
             case semicolon:
                 sym=nextsym(IN);
-                if(sym==rbrace)//ÓÒ»¨À¨ºÅ
+                if(sym==rbrace)//å³èŠ±æ‹¬å·
                     return;
                 else continue;
             case ifsym:
@@ -474,12 +495,12 @@ int statement(FILE *IN)
             case identsym:
             case chartype:
                 sym=nextsym(IN);
-                if(sym==lparent)//×óÀ¨ºÅ£¬Îªº¯Êıµ÷ÓÃÓï¾ä
+                if(sym==lparent||sym==semicolon)//å·¦æ‹¬å·æˆ–åˆ†å·ï¼Œä¸ºå‡½æ•°è°ƒç”¨è¯­å¥
                 {
                     voidfuncuse(IN);
                     continue;
                 }
-                else if(sym==equmark||sym==lbracket)//µÈºÅ»ò×ó·½À¨ºÅ£¬Îª¸³ÖµÓï¾ä
+                else if(sym==equmark||sym==lbracket)//ç­‰å·æˆ–å·¦æ–¹æ‹¬å·ï¼Œä¸ºèµ‹å€¼è¯­å¥
                 {
                     assignstatement(IN);
                     continue;
@@ -494,35 +515,35 @@ int statement(FILE *IN)
 
 }
 
-/*£¼¸³ÖµÓï¾ä£¾ ::= £¼±êÊ¶·û£¾£½£¼±í´ïÊ½£¾|£¼±êÊ¶·û£¾¡®[¡¯£¼±í´ïÊ½£¾¡®]¡¯=£¼±í´ïÊ½£¾*/
-int assignstatement(FILE *IN) //¸³ÖµÓï¾ä
+/*ï¼œèµ‹å€¼è¯­å¥ï¼ ::= ï¼œæ ‡è¯†ç¬¦ï¼ï¼ï¼œè¡¨è¾¾å¼ï¼|ï¼œæ ‡è¯†ç¬¦ï¼â€˜[â€™ï¼œè¡¨è¾¾å¼ï¼â€˜]â€™=ï¼œè¡¨è¾¾å¼ï¼*/
+int assignstatement(FILE *IN) //èµ‹å€¼è¯­å¥
 {
     printf("Assign statement\n");
-    //´ËÊ±symÊÇµÈºÅ»ò×ó·½À¨ºÅ
-    if(sym==lbracket)//×ó·½À¨ºÅ£¬Êı×é¸³Öµ
+    //æ­¤æ—¶symæ˜¯ç­‰å·æˆ–å·¦æ–¹æ‹¬å·
+    if(sym==lbracket)//å·¦æ–¹æ‹¬å·ï¼Œæ•°ç»„èµ‹å€¼
     {
-        expression(IN);//±í´ïÊ½
+        expression(IN);//è¡¨è¾¾å¼
         sym=nextsym(IN);
         {
-            if(sym==rbracket)//ÓÒ·½À¨ºÅ
+            if(sym==rbracket)//å³æ–¹æ‹¬å·
             {
                 sym=nextsym(IN);
-                if(sym==equmark)//µÈºÅ
+                if(sym==equmark)//ç­‰å·
                 {
-                    expression(IN);//±í´ïÊ½
+                    expression(IN);//è¡¨è¾¾å¼
                     sym=nextsym(IN);
-                    sym=nextsym(IN);//·ÖºÅ
+                    sym=nextsym(IN);//åˆ†å·
                     //printf("%d\n",sym);
                     return;
                 }
             }
         }
     }
-    else if(sym==equmark)//µÈºÅ
+    else if(sym==equmark)//ç­‰å·
     {
-        expression(IN);//±í´ïÊ½
+        expression(IN);//è¡¨è¾¾å¼
         sym=nextsym(IN);
-        sym=nextsym(IN);//·ÖºÅ
+        sym=nextsym(IN);//åˆ†å·
         //printf("%d\n",sym);
         return;
     }
@@ -530,27 +551,27 @@ int assignstatement(FILE *IN) //¸³ÖµÓï¾ä
     return;
 }
 
-/*£¼Ìõ¼şÓï¾ä£¾::= if ¡®(¡¯£¼Ìõ¼ş£¾¡®)¡¯£¼Óï¾ä£¾else£¼Óï¾ä£¾*/
-int ifstatement(FILE *IN) //Çé¿öÓï¾ä
+/*ï¼œæ¡ä»¶è¯­å¥ï¼::= if â€˜(â€™ï¼œæ¡ä»¶ï¼â€˜)â€™ï¼œè¯­å¥ï¼elseï¼œè¯­å¥ï¼*/
+int ifstatement(FILE *IN) //æƒ…å†µè¯­å¥
 {
     printf("If statement begin:\n");
-    //´ËÊ±symÊÇif
+    //æ­¤æ—¶symæ˜¯if
     sym=nextsym(IN);
-    if(sym==lparent)//×óÀ¨ºÅ
+    if(sym==lparent)//å·¦æ‹¬å·
     {
-        condition(IN);//Ìõ¼ş
+        condition(IN);//æ¡ä»¶
         sym=nextsym(IN);
-        if(sym==rparent)//ÓÒÀ¨ºÅ
+        if(sym==rparent)//å³æ‹¬å·
         {
             sym=nextsym(IN);
-            statement(IN);//Óï¾ä
+            statement(IN);//è¯­å¥
             if(sym==rbrace)
                 sym=nextsym(IN);
             if(sym==elsesym)//else
             {
                 printf("Else statement:\n");
                 sym=nextsym(IN);
-                statement(IN);//Óï¾ä
+                statement(IN);//è¯­å¥
                 if(sym==rbrace){
                     //printf("If statement end\n");
                     return;
@@ -562,15 +583,15 @@ int ifstatement(FILE *IN) //Çé¿öÓï¾ä
 
 }
 
-/*£¼Ìõ¼ş£¾ ::=  £¼±í´ïÊ½£¾£¼¹ØÏµÔËËã·û£¾£¼±í´ïÊ½£¾£ü£¼±í´ïÊ½£¾*/
+/*ï¼œæ¡ä»¶ï¼ ::=  ï¼œè¡¨è¾¾å¼ï¼ï¼œå…³ç³»è¿ç®—ç¬¦ï¼ï¼œè¡¨è¾¾å¼ï¼ï½œï¼œè¡¨è¾¾å¼ï¼*/
 int condition(FILE *IN)
 {
     printf("\tcondition\n");
-    //´ËÊ±symÊÇ×óÀ¨ºÅ
+    //æ­¤æ—¶symæ˜¯å·¦æ‹¬å·
     sym=nextsym(IN);
-    expression(IN);//±í´ïÊ½
+    expression(IN);//è¡¨è¾¾å¼
     sym=nextsym(IN);
-    if(sym>=les&&sym<=equal)//¹ØÏµÔËËã·û
+    if(sym>=les&&sym<=equal)//å…³ç³»è¿ç®—ç¬¦
     {
         sym=nextsym(IN);
         expression(IN);
@@ -578,20 +599,20 @@ int condition(FILE *IN)
     return;
 }
 
-/*£¼Ñ­»·Óï¾ä£¾ ::= while ¡®(¡¯£¼Ìõ¼ş£¾¡®)¡¯£¼Óï¾ä£¾*/
-int whilestatement(FILE *IN) //Ñ­»·Óï¾ä
+/*ï¼œå¾ªç¯è¯­å¥ï¼ ::= while â€˜(â€™ï¼œæ¡ä»¶ï¼â€˜)â€™ï¼œè¯­å¥ï¼*/
+int whilestatement(FILE *IN) //å¾ªç¯è¯­å¥
 {
     printf("While statement begin:\n");
-    //´ËÊ±symÊÇwhile
+    //æ­¤æ—¶symæ˜¯while
     sym=nextsym(IN);
-    if(sym==lparent)//×óÀ¨ºÅ
+    if(sym==lparent)//å·¦æ‹¬å·
     {
-        condition(IN);//Ìõ¼ş
+        condition(IN);//æ¡ä»¶
         sym=nextsym(IN);
-        if(sym==rparent)//ÓÒÀ¨ºÅ
+        if(sym==rparent)//å³æ‹¬å·
         {
             sym=nextsym(IN);
-            statement(IN);//Óï¾ä
+            statement(IN);//è¯­å¥
             if(sym==rbrace){
                 //printf("While statement end\n");
                 return;
@@ -601,27 +622,27 @@ int whilestatement(FILE *IN) //Ñ­»·Óï¾ä
     }
 }
 
-/*£¼Çé¿öÓï¾ä£¾ ::= switch ¡®(¡¯£¼±í´ïÊ½£¾¡®)¡¯ ¡®{¡¯£¼Çé¿ö±í£¾[£¼È±Ê¡£¾] ¡®}¡¯*/
-int switchstatement(FILE *IN) //Çé¿öÓï¾ä
+/*ï¼œæƒ…å†µè¯­å¥ï¼ ::= switch â€˜(â€™ï¼œè¡¨è¾¾å¼ï¼â€˜)â€™ â€˜{â€™ï¼œæƒ…å†µè¡¨ï¼[ï¼œç¼ºçœï¼] â€˜}â€™*/
+int switchstatement(FILE *IN) //æƒ…å†µè¯­å¥
 {
     printf("Switch statement:\n");
-    //´ËÊ±symÎªswitch
+    //æ­¤æ—¶symä¸ºswitch
     sym=nextsym(IN);
     {
-        if(sym==lparent)//×óÀ¨ºÅ
+        if(sym==lparent)//å·¦æ‹¬å·
         {
             expression(IN);
             sym=nextsym(IN);
-            if(sym==rparent)//ÓÒÀ¨ºÅ
+            if(sym==rparent)//å³æ‹¬å·
             {
                 sym=nextsym(IN);
-                if(sym==lbrace)//×ó»¨À¨ºÅ
+                if(sym==lbrace)//å·¦èŠ±æ‹¬å·
                 {
                     sym=nextsym(IN);
                     if(sym==casesym){//case
                         casestatement(IN);
                         //sym=nextsym(IN);
-                        if(sym==rbrace)//ÓÒ»¨À¨ºÅ
+                        if(sym==rbrace)//å³èŠ±æ‹¬å·
                         {
                             sym=nextsym(IN);
                             return;
@@ -635,23 +656,23 @@ int switchstatement(FILE *IN) //Çé¿öÓï¾ä
     }
 }
 
-/*£¼Çé¿ö×ÓÓï¾ä£¾  ::=  case£¼³£Á¿£¾£º£¼Óï¾ä£¾*/
-int casestatement(FILE *IN) //Çé¿ö×ÓÓï¾ä
+/*ï¼œæƒ…å†µå­è¯­å¥ï¼  ::=  caseï¼œå¸¸é‡ï¼ï¼šï¼œè¯­å¥ï¼*/
+int casestatement(FILE *IN) //æƒ…å†µå­è¯­å¥
 {
-    //symÏÖÔÚÊÇcase
+    //symç°åœ¨æ˜¯case
     while(1)
     {
         sym=nextsym(IN);
-        if(sym==sinquo||sym==inttype||sym==numtype)//µ¥ÒıºÅ»òÕßÕûÊı
+        if(sym==sinquo||sym==inttype||sym==numtype)//å•å¼•å·æ‹¬èµ·æ¥çš„å­—æ¯æˆ–æ•°å­—ï¼Œæˆ–è€…æ•´æ•°
         {
-            if(constant(IN)==1)//³£Á¿
+            if(constforcase(IN)==1)//å¸¸é‡
                 printf("Case statement\n");
             sym=nextsym(IN);
-            if(sym==colon)//Ã°ºÅ
+            if(sym==colon)//å†’å·
             {
                 sym=nextsym(IN);
-                statement(IN);//Óï¾ä ¿ÉÄÜ·µ»ØÓÒ»¨À¨ºÅ¡¢case¡¢default
-                if(sym==casesym){//ÏÂÒ»¸öcase
+                statement(IN);//è¯­å¥ å¯èƒ½è¿”å›å³èŠ±æ‹¬å·ã€caseã€default
+                if(sym==casesym){//ä¸‹ä¸€ä¸ªcase
                     //printf("Case statement\n");
                     continue;
                 }
@@ -659,7 +680,7 @@ int casestatement(FILE *IN) //Çé¿ö×ÓÓï¾ä
                     defaultstatement(IN);
                     return;
                 }
-                else if (sym==rbrace)//ÓÒ»¨À¨ºÅ
+                else if (sym==rbrace)//å³èŠ±æ‹¬å·
                     return;
             }
         }
@@ -667,48 +688,84 @@ int casestatement(FILE *IN) //Çé¿ö×ÓÓï¾ä
 
 }
 
-/*£¼È±Ê¡£¾ ::=  default : £¼Óï¾ä£¾*/
-int defaultstatement(FILE *IN) //È±Ê¡
+/*ï¼œç¼ºçœï¼ ::=  default : ï¼œè¯­å¥ï¼*/
+int defaultstatement(FILE *IN) //ç¼ºçœ
 {
     printf("Default statement\n");
-    //symÏÖÔÚÊÇdefault
+    //symç°åœ¨æ˜¯default
     sym=nextsym(IN);
     {
-        if(sym==colon)//Ã°ºÅ
+        if(sym==colon)//å†’å·
         {
             sym=nextsym(IN);
-            statement(IN);//Óï¾ä
+            statement(IN);//è¯­å¥
         }
     }
 }
 
-int retfuncuse(FILE *IN) //ÓĞ·µ»ØÖµº¯Êıµ÷ÓÃÓï¾ä
+/*ï¼œæœ‰è¿”å›å€¼å‡½æ•°è°ƒç”¨è¯­å¥ï¼ ::= ï¼œæ ‡è¯†ç¬¦ï¼â€˜(â€™ï¼œå€¼å‚æ•°è¡¨ï¼â€˜)â€™|<æ ‡è¯†ç¬¦>*/
+int retfuncuse(FILE *IN) //æœ‰è¿”å›å€¼å‡½æ•°è°ƒç”¨è¯­å¥
 {
     printf("Return funcuse\n");
-}
-int voidfuncuse(FILE *IN) //ÎŞ·µ»ØÖµº¯Êıµ÷ÓÃÓï¾ä
-{
-    printf("Void funcuse\n");
+    //æ­¤æ—¶symä¸ºå·¦æ‹¬å·æˆ–åˆ†å·
+    if(sym==semicolon)
+        return;
+    else if(sym==lparent)
+    {
+        valuepara(IN);//å€¼å‚æ•°è¡¨
+        sym=nextsym(IN);
+        if(sym==rparent)//å³æ‹¬å·
+        {
+            sym=nextsym(IN);
+            if(sym==semicolon)//åˆ†å·
+            {
+                return;
+            }
+        }
+    }
+    printf("retfuncuseerror\n");
 }
 
-/*£¼¶ÁÓï¾ä£¾ ::=  scanf ¡®(¡¯£¼±êÊ¶·û£¾{,£¼±êÊ¶·û£¾}¡®)¡¯*/
-int readstatement(FILE *IN) //¶ÁÓï¾ä
+/*ï¼œæ— è¿”å›å€¼å‡½æ•°è°ƒç”¨è¯­å¥ï¼ ::= ï¼œæ ‡è¯†ç¬¦ï¼â€˜(â€™ï¼œå€¼å‚æ•°è¡¨ï¼â€˜)â€™|<æ ‡è¯†ç¬¦>*/
+int voidfuncuse(FILE *IN) //æ— è¿”å›å€¼å‡½æ•°è°ƒç”¨è¯­å¥
+{
+    printf("Void funcuse\n");
+    if(sym==semicolon)
+        return;
+    else if(sym==lparent)
+    {
+        valuepara(IN);//å€¼å‚æ•°è¡¨
+        sym=nextsym(IN);
+        if(sym==rparent)//å³æ‹¬å·
+        {
+            sym=nextsym(IN);
+            if(sym==semicolon)//åˆ†å·
+            {
+                return;
+            }
+        }
+    }
+    printf("voidfuncuseerror\n");
+}
+
+/*ï¼œè¯»è¯­å¥ï¼ ::=  scanf â€˜(â€™ï¼œæ ‡è¯†ç¬¦ï¼{,ï¼œæ ‡è¯†ç¬¦ï¼}â€˜)â€™*/
+int readstatement(FILE *IN) //è¯»è¯­å¥
 {
     printf("Read statement\n");
-    //´ËÊ±symÊÇscanf
+    //æ­¤æ—¶symæ˜¯scanf
     sym=nextsym(IN);
-    if(sym==lparent)//×óÀ¨ºÅ
+    if(sym==lparent)//å·¦æ‹¬å·
     {
         while(1)
         {
             sym=nextsym(IN);
-            if(sym==identsym||sym==chartype)//±êÊ¶·û
+            if(sym==identsym||sym==chartype)//æ ‡è¯†ç¬¦
             {
                 sym=nextsym(IN);
-                if(sym==comma)//ÏÂÒ»¸ö±êÊ¶·û
+                if(sym==comma)//ä¸‹ä¸€ä¸ªæ ‡è¯†ç¬¦
                     continue;
-                else{//ÓÒÀ¨ºÅ
-                    sym=nextsym(IN);//·ÖºÅ
+                else{//å³æ‹¬å·
+                    sym=nextsym(IN);//åˆ†å·
                     return;
                 }
 
@@ -717,81 +774,81 @@ int readstatement(FILE *IN) //¶ÁÓï¾ä
     }
 }
 
-/*£¼Ğ´Óï¾ä£¾ ::= printf ¡®(¡¯ £¼×Ö·û´®£¾,£¼±í´ïÊ½£¾ ¡®)¡¯
-               | printf ¡®(¡¯£¼×Ö·û´®£¾ ¡®)¡¯| printf ¡®(¡¯£¼±í´ïÊ½£¾¡®)¡¯*/
-int writestatement(FILE *IN) //Ğ´Óï¾ä
+/*ï¼œå†™è¯­å¥ï¼ ::= printf â€˜(â€™ ï¼œå­—ç¬¦ä¸²ï¼,ï¼œè¡¨è¾¾å¼ï¼ â€˜)â€™
+               | printf â€˜(â€™ï¼œå­—ç¬¦ä¸²ï¼ â€˜)â€™| printf â€˜(â€™ï¼œè¡¨è¾¾å¼ï¼â€˜)â€™*/
+int writestatement(FILE *IN) //å†™è¯­å¥
 {
     printf("Write statement\n");
-    //´ËÊ±symÎªprintf
+    //æ­¤æ—¶symä¸ºprintf
     sym=nextsym(IN);
-    if(sym==lparent)//×óÀ¨ºÅ
+    if(sym==lparent)//å·¦æ‹¬å·
     {
         sym=nextsym(IN);
-        if(sym==douquo)//Ë«ÒıºÅ£¬×Ö·û´®
+        if(sym==douquo)//åŒå¼•å·ï¼Œå­—ç¬¦ä¸²
         {
             strings(IN);
             sym=nextsym(IN);
-            if(sym==comma)//¶ººÅ£¬×Ö·û´®ºóÓĞ±í´ïÊ½
+            if(sym==comma)//é€—å·ï¼Œå­—ç¬¦ä¸²åæœ‰è¡¨è¾¾å¼
             {
                 expression(IN);
                 sym=nextsym(IN);
-                if(sym==rparent)//ÓÒÀ¨ºÅ
+                if(sym==rparent)//å³æ‹¬å·
                 {
-                    sym=nextsym(IN);//·ÖºÅ
+                    sym=nextsym(IN);//åˆ†å·
                     return;
                 }
             }
-            else if(sym==rparent)//ÓÒÀ¨ºÅ
+            else if(sym==rparent)//å³æ‹¬å·
             {
-                sym=nextsym(IN);//·ÖºÅ
+                sym=nextsym(IN);//åˆ†å·
                 return;
             }
         }
-        else//±í´ïÊ½
+        else//è¡¨è¾¾å¼
         {
             expression(IN);
-            if(sym==rparent)//ÓÒÀ¨ºÅ
+            if(sym==rparent)//å³æ‹¬å·
             {
-                sym=nextsym(IN);//·ÖºÅ
+                sym=nextsym(IN);//åˆ†å·
                 return;
             }
         }
     }
 }
 
-/*£¼·µ»ØÓï¾ä£¾ ::=  return[¡®(¡¯£¼±í´ïÊ½£¾¡®)¡¯] */
-int returnstatement(FILE *IN) //·µ»ØÓï¾ä
+/*ï¼œè¿”å›è¯­å¥ï¼ ::=  return[â€˜(â€™ï¼œè¡¨è¾¾å¼ï¼â€˜)â€™] */
+int returnstatement(FILE *IN) //è¿”å›è¯­å¥
 {
     printf("Return statement\n");
     sym=nextsym(IN);
-    //´ËÊ±symÎªreturn
-    if(sym==lparent)//×óÀ¨ºÅ
+    //æ­¤æ—¶symä¸ºreturn
+    if(sym==lparent)//å·¦æ‹¬å·
     {
         expression(IN);
         sym=nextsym(IN);
         {
-            if(sym==rparent){//ÓÒÀ¨ºÅ
+            if(sym==rparent){//å³æ‹¬å·
                 sym=nextsym(IN);
                 return;
             }
         }
     }
-    else//·ÖºÅ
+    else//åˆ†å·
         return;
 }
 
 
-/*£¼³£Á¿£¾ ::=  £¼ÕûÊı£¾|£¼×Ö·û£¾
-  £¼×Ö·û£¾ ::='£¼¼Ó·¨ÔËËã·û£¾'£ü'£¼³Ë·¨ÔËËã·û£¾'£ü'£¼×ÖÄ¸£¾'£ü'£¼Êı×Ö£¾'*/
+/*ï¼œå¸¸é‡ï¼ ::=  ï¼œæ•´æ•°ï¼|ï¼œå­—ç¬¦ï¼
+  ï¼œå­—ç¬¦ï¼ ::='ï¼œåŠ æ³•è¿ç®—ç¬¦ï¼'ï½œ'ï¼œä¹˜æ³•è¿ç®—ç¬¦ï¼'ï½œ'ï¼œå­—æ¯ï¼'ï½œ'ï¼œæ•°å­—ï¼'*/
 int constant(FILE *IN)
 {
-    //sym´ËÊ±Îª'»òÕßÕûÊı
-    if(sym==sinquo){//µ¥ÒıºÅ
+    //symæ­¤æ—¶ä¸º'æˆ–è€…æ•´æ•°
+    if(sym==sinquo){//å•å¼•å·
         sym=nextsym(IN);
         if((sym>=add&&sym<=divi)||sym==chartype||sym==underline||sym==numtype)
         {
             sym=nextsym(IN);
-            if(sym==sinquo)//µ¥ÒıºÅ
+            if(sym==sinquo)//å•å¼•å·
                 return 1;
             else{
                 printf("constanterror\n");
@@ -799,25 +856,31 @@ int constant(FILE *IN)
             }
         }
         else{
-            sym=nextsym(IN);//µ¥ÒıºÅ
+            sym=nextsym(IN);//å•å¼•å·
             return 0;
         }
     }
     else if(sym==inttype||sym==numtype)
         return 1;
+    else if(sym==add||sym==sub)//åŠ å·æˆ–å‡å·
+    {
+        sym=nextsym(IN);
+        if(sym==inttype||sym==numtype)
+            return 1;
+    }
     return 0;
 }
 
-/*Çé¿öÓï¾äÖĞ£¬switchºóÃæµÄ±í´ïÊ½ºÍcaseºóÃæµÄ³£Á¿Ö»ÔÊĞí³öÏÖintºÍcharÀàĞÍ*/
+/*æƒ…å†µè¯­å¥ä¸­ï¼Œswitchåé¢çš„è¡¨è¾¾å¼å’Œcaseåé¢çš„å¸¸é‡åªå…è®¸å‡ºç°intå’Œcharç±»å‹*/
 int constforcase(FILE *IN)
 {
-    //sym´ËÊ±Îª'»òÕßÕûÊı
-    if(sym==sinquo){//µ¥ÒıºÅ
+    //symæ­¤æ—¶ä¸º'æˆ–è€…æ•´æ•°
+    if(sym==sinquo){//å•å¼•å·
         sym=nextsym(IN);
         if(sym==chartype||sym==numtype)
         {
             sym=nextsym(IN);
-            if(sym==sinquo)//µ¥ÒıºÅ
+            if(sym==sinquo)//å•å¼•å·
                 return 1;
             else{
                 printf("constanterror\n");
@@ -825,19 +888,25 @@ int constforcase(FILE *IN)
             }
         }
         else{
-            sym=nextsym(IN);//µ¥ÒıºÅ
+            sym=nextsym(IN);//å•å¼•å·
             return 0;
         }
     }
     else if(sym==inttype||sym==numtype)
         return 1;
+    else if(sym==add||sym==sub)//åŠ å·æˆ–å‡å·
+    {
+        sym=nextsym(IN);
+        if(sym==inttype||sym==numtype)
+            return 1;
+    }
     return 0;
 }
-/*£¼×Ö·û´®£¾ ::=  "£ûÊ®½øÖÆ±àÂëÎª32,33,35-126µÄASCII×Ö·û£ı"*/
+/*ï¼œå­—ç¬¦ä¸²ï¼ ::=  "ï½›åè¿›åˆ¶ç¼–ç ä¸º32,33,35-126çš„ASCIIå­—ç¬¦ï½"*/
 int strings(FILE *IN)
 {
     printf("\tString\n");
-    //sym´ËÊ±Îª"
+    //symæ­¤æ—¶ä¸º"
     sym=nextsym(IN);
     while(sym!=douquo)
     {
@@ -846,23 +915,36 @@ int strings(FILE *IN)
         else
             return;
     }
-    return;//·µ»ØÁËË«ÒıºÅ
+    return;//è¿”å›äº†åŒå¼•å·
 }
 
-int parameters(FILE *IN)
+
+
+int valuepara(FILE *IN) //å€¼å‚æ•°è¡¨
 {
-    printf("Parameters\n");
+    printf("\tValue Parameters\n");
+    /*while(sym!=rparent)
+    {
+        expression(IN);
+        sym=nextsym(IN);
+        printf("%d\n",sym);
+        if(sym==comma)
+        {
+             //sym=nextsym(IN);
+             continue;
+        }
+    }*/
 }
 
-int expression(FILE *IN)//±í´ïÊ½
+int expression(FILE *IN)//è¡¨è¾¾å¼
 {
     printf("\tExpression\n");
 }
-int item(FILE *IN) //Ïî
+int item(FILE *IN) //é¡¹
 {
     printf("\tItem\n");
 }
-int factor(FILE *IN) //Òò×Ó
+int factor(FILE *IN) //å› å­
 {
     printf("\tFactor\n");
 }
@@ -871,10 +953,12 @@ int factor(FILE *IN) //Òò×Ó
 int nextsym(FILE *IN)
 {
     int t=0, i;
-    memset(token, 0, sizeof(token)); //Çå¿ÕÊı×é£¡
+    memset(token, 0, sizeof(token)); //æ¸…ç©ºæ•°ç»„ï¼
     ch=fgetc(IN);
     if(feof(IN)) return -1;
-    if(isdigit(ch))//Èç¹ûÊÇÊı×Ö
+    if(ch=='0')//å¦‚æœæ˜¯é›¶ï¼Œç›´æ¥è¿”å›
+        return numtype;
+    if(isdigit(ch))//å¦‚æœæ˜¯éé›¶æ•°å­—
     {
         token[t]=ch;
         ch=fgetc(IN);
@@ -883,15 +967,15 @@ int nextsym(FILE *IN)
             token[++t]=ch;
             ch=fgetc(IN);
         }
-        if(!feof(IN)) //·ñÔòÎÄ¼ş×îºóÒ»¸ö×Ö·ûÎªÊı×ÖÊ±»á½øÈëÎŞÏŞÑ­»·
+        if(!feof(IN)) //å¦åˆ™æ–‡ä»¶æœ€åä¸€ä¸ªå­—ç¬¦ä¸ºæ•°å­—æ—¶ä¼šè¿›å…¥æ— é™å¾ªç¯
             fseek(IN,-1L,SEEK_CUR);
         if(t==0) return numtype;
         else return inttype;
     }
-    else if (isalpha(ch)) //Èç¹ûÊÇ×ÖÄ¸
+    else if (isalpha(ch)) //å¦‚æœæ˜¯å­—æ¯
     {
         int type=-1;
-        token[t]=tolower(ch); //Í³Ò»´æ³ÉĞ¡Ğ´
+        token[t]=tolower(ch); //ç»Ÿä¸€å­˜æˆå°å†™
         ch=fgetc(IN);
         while(isdigit(ch)|isalpha(ch))
         {
@@ -899,9 +983,9 @@ int nextsym(FILE *IN)
             ch=fgetc(IN);
             continue;
         }
-        if(!feof(IN)) //·ñÔòÎÄ¼ş×îºóÒ»¸ö×Ö·ûÎª×ÖÄ¸Ê±»á½øÈëÎŞÏŞÑ­»·
+        if(!feof(IN)) //å¦åˆ™æ–‡ä»¶æœ€åä¸€ä¸ªå­—ç¬¦ä¸ºå­—æ¯æ—¶ä¼šè¿›å…¥æ— é™å¾ªç¯
             fseek(IN,-1L,SEEK_CUR);
-        //ÅĞ¶ÏÊÇ·ñÎª±£Áô×Ö
+        //åˆ¤æ–­æ˜¯å¦ä¸ºä¿ç•™å­—
         if (strcmp(token,keyword[0])==0)
             return constsym;
         else if (strcmp(token,keyword[1])==0)
@@ -930,13 +1014,13 @@ int nextsym(FILE *IN)
             return printfsym;
         else if (strcmp(token,keyword[13])==0)
             return returnsym;
-        else //ÊÇ±êÊ¶·û
+        else //æ˜¯æ ‡è¯†ç¬¦
         {
             if(t==0) return chartype;
             else return identsym;
         }
     }
-    else if ((ch=='=')|(ch=='<')|(ch=='>')|(ch=='!')) //Èç¹ûÊÇ±È½ÏÔËËã·û
+    else if ((ch=='=')|(ch=='<')|(ch=='>')|(ch=='!')) //å¦‚æœæ˜¯æ¯”è¾ƒè¿ç®—ç¬¦
     {
         token[t]=ch;
         ch=fgetc(IN);
@@ -957,7 +1041,7 @@ int nextsym(FILE *IN)
         }
         else
         {
-            fseek(IN,-1L,SEEK_CUR); //ÍËÒ»¸ö×Ö·û
+            fseek(IN,-1L,SEEK_CUR); //é€€ä¸€ä¸ªå­—ç¬¦
             switch(token[0])
             {
                 case '=':
@@ -969,11 +1053,11 @@ int nextsym(FILE *IN)
             }
         }
     }
-    else //ÊÇÆäËû×Ö·û
+    else //æ˜¯å…¶ä»–å­—ç¬¦
     {
         switch(ch)
         {
-            //Ìø¹ı¿Õ°××Ö·û
+            //è·³è¿‡ç©ºç™½å­—ç¬¦
             case '\n':
                 return nextsym(IN);
             case ' ':
@@ -1049,17 +1133,18 @@ int main()
             //printf("%d\t%d\n",No++,sym);
             if(sym==constsym)
                 constdec(IN);
-            if(sym==intsym||sym==charsym)//ÀàĞÍ±êÊ¶·û
+            if(sym==intsym||sym==charsym)//ç±»å‹æ ‡è¯†ç¬¦
                 differ(IN);
             if(sym==voidsym)
             {
                 sym=nextsym(IN);
-                if(sym!=mainsym)//ÎŞ·µ»ØÖµº¯Êı
+                if(sym!=mainsym)//æ— è¿”å›å€¼å‡½æ•°
                     voidfuncdef(IN);
-                else //Ö÷º¯Êı
+                else //ä¸»å‡½æ•°
                     mainfunc(IN);
             }
         }
+        printf("Program end\n");
     }
     return 0;
 }
