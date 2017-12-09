@@ -3,12 +3,10 @@
 #include <string.h>
 #include <ctype.h>
 
-#define KEYNUM 14
-#define MAXIDENTLEN 20
-#define MAXSYMTABLEN 100
-#define MAXINTERCODE 10
-#define MAXINTERLEN 100
-#define MAXEXPRLEN 50
+#define MAXIDENTLEN 20   //标识符最大长度
+#define MAXSYMTABLEN 100 //符号表最大长度
+#define MAXINTERCODE 10  //四元式每一项最大长度
+#define MAXINTERLEN 500  //四元式序列最大长度
 
 const char *keyword[]={"const","int","char","void","main","if","else","while","switch","case",
                        "default","scanf","printf","return"};
@@ -56,13 +54,15 @@ int interpc=0;//四元式序列指针
 int interi;   //用来遍历四元式序列的参数
 
 /*用于表达式转四元式的返回字符串*/
-int exprt=0; //四元式中的临时变量tn计数
-int labelt=0; //四元式中的标签计数
+int exprt=1; //四元式中的临时变量tn计数
+int labelt=1; //四元式中的标签计数
+int endofcase=1;
 char exprtemp[MAXIDENTLEN]; //exprt的字符串形式
 char labtemp[MAXIDENTLEN]; //labelt的字符串形式
 char exprret[MAXIDENTLEN]; //表达式返回的字符串
 char factret[MAXIDENTLEN]; //因子返回的字符串
 char itemret[MAXIDENTLEN]; //项返回的字符串
+char strret[MAXIDENTLEN];  //写语句打印的字符串
 
 FILE *IN, *OUT, *INTER;
 int No=1;
@@ -74,8 +74,8 @@ int braceflag=0;
 int logflag;
 
 char ch; //字符
-char token[100]; //当前字符串
-char ident[100]; //当前标识符、数字
+char token[MAXIDENTLEN]; //当前字符串
+char ident[MAXIDENTLEN]; //当前标识符、数字
 int sym;     //当前标识符
 int symnum;  //当前int标识符的数值
 int symtype; //当前标识符类型
@@ -167,6 +167,7 @@ int constdec()
                     | char＜标识符＞＝＜字符＞{,＜标识符＞＝＜字符＞}*/
 int constdef()
 {
+    int subflag=0;
     printf("\tConstdef\n");
     fprintf(OUT,"\tConstdef\n");
     sym=nextsym();
@@ -194,12 +195,17 @@ int constdef()
                 if(sym==equmark)//等号
                 {
                     sym=nextsym();
-                    if(sym==add||sym==sub)
+                    if(sym==add||sym==sub){
+                        if(sym==sub) subflag=1;
                         sym=nextsym();
+                    }
                     if(sym==inttype||sym==numtype)//整数
                     {
                         if(logflag==-1){
-                            symtab[tabpc].value=symnum;//值
+                            if(subflag==1)
+                                symtab[tabpc].value=-symnum;//值
+                            else
+                                symtab[tabpc].value=symnum;//值
                             strcpy(intercode[interpc].inter3,token);
                         }
                         sym=nextsym();
@@ -219,7 +225,7 @@ int constdef()
             if(sym==identsym||sym==chartype)//标识符
             {
                 //登录符号表
-				logflag==checkiflog();
+				logflag=checkiflog();
                 if(logflag==-1){
                     strcpy(symtab[++tabpc].name,token);
                     symtab[tabpc].kind=0;//常量
@@ -230,6 +236,7 @@ int constdef()
                     strcpy(intercode[interpc].inter2,token);
                 }
                 else{
+                    printf("%d\n",logflag);
                     printf("%s DUPLICATE DEFINE\n",token);
                 }
                 sym=nextsym();
@@ -551,7 +558,7 @@ int parameters()//参数表
             symtype=(sym==intsym?1:0);
             sym=nextsym();
             //printf("%d\n",sym);
-			logflag==checkiflog();
+			logflag=checkiflog();
             if(sym==identsym||sym==chartype){//标识符
                 if(logflag==-1){
                     strcpy(symtab[++tabpc].name,token);
@@ -812,18 +819,21 @@ int ifstatement() //情况语句
 /*＜条件＞ ::=  ＜表达式＞＜关系运算符＞＜表达式＞｜＜表达式＞*/
 int condition()
 {
-    //char relation[6];
+    char conident[MAXIDENTLEN];
+    char relation[MAXIDENTLEN];
     printf("\tcondition\n");
     fprintf(OUT,"\tcondition\n");
     //此时sym是左括号
     sym=nextsym();
     expression();//表达式
-    strcpy(intercode[++interpc].inter1,exprret);
+    strcpy(conident,exprret);
     if(sym>=les&&sym<=equal)//关系运算符
     {
-        strcpy(intercode[interpc].inter0,token);
+        strcpy(relation,token);
         sym=nextsym();
         expression();
+        strcpy(intercode[++interpc].inter0,relation);
+        strcpy(intercode[interpc].inter1,conident);
         strcpy(intercode[interpc].inter2,exprret);
         //跳转
         strcpy(intercode[++interpc].inter0,"bz");
@@ -837,18 +847,30 @@ int condition()
 /*＜循环语句＞ ::= while ‘(’＜条件＞‘)’＜语句＞*/
 int whilestatement() //循环语句
 {
+    char beginlabel[MAXIDENTLEN];//循环开始、goto的label
+    char endlabel[MAXIDENTLEN];//循环结束、bz的label
     printf("While statement begin:\n");
     fprintf(OUT,"While statement begin:\n");
     //sym此时为while
     sym=nextsym();
     if(sym==lparent)//左括号
     {
-        condition();//条件
-        sym=nextsym();
+        itoa(labelt++,beginlabel,10);
+        strcpy(intercode[++interpc].inter0,"Label");
+        strcat(intercode[interpc].inter0,beginlabel);
+        strcpy(intercode[interpc].inter1,":");
+        itoa(condition(),endlabel,10);//条件
         if(sym==rparent)//右括号
         {
             sym=nextsym();
             statement();//语句
+            strcpy(intercode[++interpc].inter0,"goto");
+            strcpy(intercode[interpc].inter1,"Label");
+            strcat(intercode[interpc].inter1,beginlabel);
+            //循环结束
+            strcpy(intercode[++interpc].inter0,"Label");
+            strcat(intercode[interpc].inter0,endlabel);
+            strcpy(intercode[interpc].inter1,":");
             if(sym==rbrace)
                 return;
             else printf("whileerror\n");
@@ -859,6 +881,7 @@ int whilestatement() //循环语句
 /*＜情况语句＞ ::= switch ‘(’＜表达式＞‘)’ ‘{’＜情况表＞[＜缺省＞] ‘}’*/
 int switchstatement() //情况语句
 {
+    char switchlabel[MAXIDENTLEN];//每次用来比较的
     printf("Switch statement:\n");
     fprintf(OUT,"Switch statement:\n");
     //sym此时为switch
@@ -868,6 +891,7 @@ int switchstatement() //情况语句
         {
 			sym=nextsym();
             expression();
+            strcpy(switchlabel,exprret);
             if(sym==rparent)//右括号
             {
                 sym=nextsym();
@@ -875,7 +899,7 @@ int switchstatement() //情况语句
                 {
                     sym=nextsym();
                     if(sym==casesym){//case
-                        casestatement();
+                        casestatement(switchlabel);
                         if(sym==rbrace)//右花括号
                         {
                             sym=nextsym();
@@ -891,11 +915,16 @@ int switchstatement() //情况语句
 }
 
 /*＜情况子语句＞  ::=  case＜常量＞：＜语句＞*/
-int casestatement() //情况子语句
+int casestatement(char *switchlabel) //情况子语句
 {
     //sym此时为case
+    char caselabel[MAXIDENTLEN];
+    char endlabel[MAXIDENTLEN];
+    itoa(endofcase++,endlabel,10);
     while(1)
     {
+        strcpy(intercode[++interpc].inter0,"==");
+        strcpy(intercode[interpc].inter1,switchlabel);
         sym=nextsym();
         if(sym==sinquo||sym==inttype||sym==numtype)//单引号括起来的字母或数字，或者整数
         {
@@ -903,19 +932,41 @@ int casestatement() //情况子语句
                 printf("Case statement\n");
                 fprintf(OUT,"Case statement\n");
             }
+            strcpy(intercode[interpc].inter2,ident);
+            //跳转
+            strcpy(intercode[++interpc].inter0,"bz");
+            itoa(labelt++,caselabel,10);
+            strcpy(intercode[interpc].inter1,"Label");
+            strcat(intercode[interpc].inter1,caselabel);
             sym=nextsym();
             if(sym==colon)//冒号
             {
                 sym=nextsym();
                 statement();//语句 可能返回右花括号、case、default
+                //结束switch
+                strcpy(intercode[++interpc].inter0,"goto");
+                strcpy(intercode[interpc].inter1,"Labeleoc");
+                strcat(intercode[interpc].inter1,endlabel);
+
+                //下一个case开始
+                strcpy(intercode[++interpc].inter0,"Label");
+                strcat(intercode[interpc].inter0,caselabel);
+                strcpy(intercode[interpc].inter1,":");
                 if(sym==casesym)//下一个case
                     continue;
                 else if(sym==defaultsym){//default
                     defaultstatement();
+                    strcpy(intercode[++interpc].inter0,"Labeleoc");
+                    strcat(intercode[interpc].inter0,endlabel);
+                    strcpy(intercode[interpc].inter1,":");
                     return;
                 }
-                else if (sym==rbrace)//右花括号
+                else if (sym==rbrace){//右花括号
+                    strcpy(intercode[++interpc].inter0,"Labeleoc");
+                    strcat(intercode[interpc].inter0,endlabel);
+                    strcpy(intercode[interpc].inter1,":");
                     return;
+                }
             }
         }
     }
@@ -1013,6 +1064,8 @@ int readstatement() //读语句
 				logflag=checkiflog();
                 if(logflag==-1)//不在符号表中
                     printf("%s UNDEFINED IDENT\n",token);
+                strcpy(intercode[++interpc].inter0,"scan");
+                strcpy(intercode[interpc].inter1,ident);
                 sym=nextsym();
                 if(sym==comma)//下一个标识符
                     continue;
@@ -1039,11 +1092,15 @@ int writestatement() //写语句
         if(sym==douquo)//双引号，字符串
         {
             strings();
+            strcpy(intercode[++interpc].inter0,"print");
+            strcpy(intercode[interpc].inter1,strret);
             sym=nextsym();
             if(sym==comma)//逗号，字符串后有表达式
             {
 				sym=nextsym();
                 expression();
+                strcpy(intercode[++interpc].inter0,"print");
+                strcpy(intercode[interpc].inter2,exprret);
                 if(sym==rparent)//右括号
                 {
                     sym=nextsym();//分号
@@ -1059,6 +1116,8 @@ int writestatement() //写语句
         else//表达式
         {
             expression();
+            strcpy(intercode[++interpc].inter0,"print");
+            strcpy(intercode[interpc].inter2,exprret);
             if(sym==rparent)//右括号
             {
                 sym=nextsym();//分号
@@ -1158,14 +1217,17 @@ int constforcase()
 /*＜字符串＞ ::=  "｛十进制编码为32,33,35-126的ASCII字符｝"*/
 int strings()
 {
+    memset(strret, 0, sizeof(strret));
     printf("\tString\n");
     fprintf(OUT,"\tString\n");
     //sym此时为双引号
     sym=nextsym();
     while(sym!=douquo)
     {
-        if(sym>=constsym&&sym<=underline)
+        if(sym>=constsym&&sym<=underline){
+            strcat(strret,token);
             sym=nextsym();
+        }
         else
             return;
     }
@@ -1180,9 +1242,13 @@ int expression()//表达式
     printf("\tExpression begin\n");
     fprintf(OUT,"\tExpression begin\n");
     if(sym==add||sym==sub){
-        sym=nextsym();
+        if(sym==sub){
+            sym=nextsym();
+            strcpy(intercode[++interpc].inter0,"oppo");
+            strcpy(intercode[interpc].inter3,ident);
+        }
+        else sym=nextsym();
     }
-    //strcpy(expr[exprpc++].ch,token);
     while(1)
     {
         item();
@@ -1328,8 +1394,8 @@ int factor() //因子
                 return;
             }
             break;
-        case add:
-        case sub://整数前正负号
+        case sub:
+        case add://整数前正负号
             sym=nextsym();
             if(sym==inttype||sym==numtype){
                 sym=nextsym();
