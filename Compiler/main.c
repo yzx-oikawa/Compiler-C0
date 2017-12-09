@@ -55,12 +55,14 @@ struct intercodes intercode[MAXINTERLEN];
 int interpc=0;//四元式序列指针
 int interi;   //用来遍历四元式序列的参数
 
-
-int exprt=0;
-char exprtemp[20];
-char itemret[20];
-char exprret[20];
-char factret[20];
+/*用于表达式转四元式的返回字符串*/
+int exprt=0; //四元式中的临时变量tn计数
+int labelt=0; //四元式中的标签计数
+char exprtemp[MAXIDENTLEN]; //exprt的字符串形式
+char labtemp[MAXIDENTLEN]; //labelt的字符串形式
+char exprret[MAXIDENTLEN]; //表达式返回的字符串
+char factret[MAXIDENTLEN]; //因子返回的字符串
+char itemret[MAXIDENTLEN]; //项返回的字符串
 
 FILE *IN, *OUT, *INTER;
 int No=1;
@@ -70,7 +72,6 @@ int vardecbegflag=0;//1-变量声明开始
 int vardecendflag=1;//1-变量声明结束
 int braceflag=0;
 int logflag;
-int exprflag=0;
 
 char ch; //字符
 char token[100]; //当前字符串
@@ -724,16 +725,17 @@ int statement()
 /*＜赋值语句＞ ::= ＜标识符＞＝＜表达式＞|＜标识符＞‘[’＜表达式＞‘]’=＜表达式＞*/
 int assignstatement() //赋值语句
 {
+    char assignident[MAXIDENTLEN];//被赋值的变量
+    char assarrnum[MAXIDENTLEN];//数组长度
     printf("Assign statement\n");
     fprintf(OUT,"Assign statement\n");
+    strcpy(assignident,ident);
     //sym此时为等号或左方括号
     if(sym==lbracket)//左方括号，数组赋值
     {
-        strcpy(intercode[++interpc].inter0,"arrass");
-        strcpy(intercode[interpc].inter3,ident);
 		sym=nextsym();
         expression();//表达式
-        strcpy(intercode[interpc].inter2,ident);
+        strcpy(assarrnum,exprret);
         {
             if(sym==rbracket)//右方括号
             {
@@ -742,7 +744,10 @@ int assignstatement() //赋值语句
                 {
 					sym=nextsym();
                     expression();//表达式
-                    strcpy(intercode[interpc].inter1,ident);
+                    strcpy(intercode[++interpc].inter0,"arrass");
+                    strcpy(intercode[interpc].inter1,exprret);
+                    strcpy(intercode[interpc].inter2,assarrnum);
+                    strcpy(intercode[interpc].inter3,assignident);
                     return;
                 }
             }
@@ -750,11 +755,11 @@ int assignstatement() //赋值语句
     }
     else if(sym==equmark)//等号
     {
-        strcpy(intercode[++interpc].inter0,"assign");
-        strcpy(intercode[interpc].inter3,ident);
 		sym=nextsym();
         expression();//表达式
-        strcpy(intercode[interpc].inter1,ident);
+        strcpy(intercode[++interpc].inter0,"assign");
+        strcpy(intercode[interpc].inter1,exprret);
+        strcpy(intercode[interpc].inter3,assignident);
         return;
     }
     return;
@@ -763,17 +768,24 @@ int assignstatement() //赋值语句
 /*＜条件语句＞::= if ‘(’＜条件＞‘)’＜语句＞else＜语句＞*/
 int ifstatement() //情况语句
 {
+    char iflabel[MAXIDENTLEN];//goto的label
+    char elselabel[MAXIDENTLEN];//bz的label
     printf("If statement begin:\n");
     fprintf(OUT,"If statement begin:\n");
     //sym此时为if
     sym=nextsym();
     if(sym==lparent)//左括号
     {
-        condition();//条件
+        itoa(condition(),elselabel,10);//条件
         if(sym==rparent)//右括号
         {
             sym=nextsym();
             statement();//语句
+            strcpy(intercode[++interpc].inter0,"goto");
+            itoa(labelt++,labtemp,10);
+            strcpy(iflabel,labtemp);
+            strcpy(intercode[interpc].inter1,"Label");
+            strcat(intercode[interpc].inter1,labtemp);
             if(sym==rbrace)
                 sym=nextsym();
             if(sym==elsesym)//else
@@ -781,7 +793,13 @@ int ifstatement() //情况语句
                 printf("Else statement:\n");
                 fprintf(OUT,"Else statement:\n");
                 sym=nextsym();
+                strcpy(intercode[++interpc].inter0,"Label");
+                strcat(intercode[interpc].inter0,elselabel);
+                strcpy(intercode[interpc].inter1,":");
                 statement();//语句
+                strcpy(intercode[++interpc].inter0,"Label");
+                strcat(intercode[interpc].inter0,iflabel);
+                strcpy(intercode[interpc].inter1,":");
                 if(sym==rbrace)
                     return;
                 else printf("iferror\n");
@@ -794,30 +812,26 @@ int ifstatement() //情况语句
 /*＜条件＞ ::=  ＜表达式＞＜关系运算符＞＜表达式＞｜＜表达式＞*/
 int condition()
 {
-    char relation[6];
+    //char relation[6];
     printf("\tcondition\n");
     fprintf(OUT,"\tcondition\n");
     //此时sym是左括号
     sym=nextsym();
     expression();//表达式
-    strcpy(intercode[++interpc].inter1,ident);
+    strcpy(intercode[++interpc].inter1,exprret);
     if(sym>=les&&sym<=equal)//关系运算符
     {
-        //les, loe, mor, moe, noteq, equal,
-        switch(sym){
-            case les: strcpy(relation,"les");break;
-            case loe: strcpy(relation,"loe");break;
-            case mor: strcpy(relation,"mor");break;
-            case moe: strcpy(relation,"moe");break;
-            case noteq: strcpy(relation,"noteq");break;
-            case equal: strcpy(relation,"equal");break;
-        }
-        strcpy(intercode[interpc].inter0,relation);
+        strcpy(intercode[interpc].inter0,token);
         sym=nextsym();
         expression();
-        strcpy(intercode[interpc].inter2,ident);
+        strcpy(intercode[interpc].inter2,exprret);
+        //跳转
+        strcpy(intercode[++interpc].inter0,"bz");
+        itoa(labelt++,labtemp,10);
+        strcpy(intercode[interpc].inter1,"Label");
+        strcat(intercode[interpc].inter1,labtemp);
     }
-    return;
+    return labelt-1;
 }
 
 /*＜循环语句＞ ::= while ‘(’＜条件＞‘)’＜语句＞*/
@@ -1066,7 +1080,7 @@ int returnstatement() //返回语句
     {
 		sym=nextsym();
         expression();
-        strcpy(intercode[interpc].inter1,ident);
+        strcpy(intercode[interpc].inter1,exprret);
         if(sym==rparent){//右括号
             sym=nextsym();
             return;
@@ -1161,7 +1175,7 @@ int strings()
 /*＜表达式＞ ::= ［+｜-］＜项＞{＜加法运算符＞＜项＞}*/
 int expression()//表达式
 {
-    char expr[3][10];
+    char expr[3][MAXIDENTLEN];
     int exprpc=1;
     printf("\tExpression begin\n");
     fprintf(OUT,"\tExpression begin\n");
@@ -1214,7 +1228,7 @@ int expression()//表达式
 /*＜项＞ ::= ＜因子＞{＜乘法运算符＞＜因子＞}*/
 int item() //项
 {
-    char ite[3][10];
+    char ite[3][MAXIDENTLEN];
     int itepc=1;
     printf("\tItem\n");
     fprintf(OUT,"\tItem\n");
@@ -1263,6 +1277,8 @@ int item() //项
 ‘(’＜表达式＞‘)’｜＜整数＞|＜字符＞｜＜有返回值函数调用语句＞ */
 int factor() //因子
 {
+    char factident[MAXIDENTLEN];
+    char factarray[MAXIDENTLEN];
     printf("\tFactor\n");
     fprintf(OUT,"\tFactor\n");
     switch(sym)
@@ -1273,12 +1289,21 @@ int factor() //因子
             logflag=checkiflog();
             if(logflag==-1)//不在符号表中
                 printf("%s UNDEFINED IDENT\n",token);
+            strcpy(factident,ident);
             sym=nextsym();
             if(sym==lbracket){//左方括号，数组
                 sym=nextsym();
                 expression();
+                strcpy(factarray,exprret);//数组系数
                 if(sym==rbracket){//右方括号
                     sym=nextsym();
+                    strcpy(intercode[++interpc].inter0,"arrget");
+                    strcpy(intercode[interpc].inter1,factident);
+                    strcpy(intercode[interpc].inter2,factarray);
+                    itoa(exprt++,exprtemp,10);
+                    strcpy(intercode[interpc].inter3,"t");
+                    strcat(intercode[interpc].inter3,exprtemp);
+                    strcpy(factret,intercode[interpc].inter3);
                     return;
                 }
             }
@@ -1286,8 +1311,8 @@ int factor() //因子
             {
                 retfuncuse();//返回右括号
                 sym=nextsym();
-                //strcpy(expr[exprpc++].ch,token);
-                return;
+                strcpy(factret,"ret");
+                return;//
             }
             else{//标识符
                 strcpy(factret,ident);
@@ -1300,25 +1325,22 @@ int factor() //因子
             strcpy(factret,exprret);
             if(sym==rparent){//右括号
                 sym=nextsym();
-                //strcpy(expr[exprpc++].ch,token);
                 return;
             }
             break;
         case add:
         case sub://整数前正负号
-            //strcpy(expr[exprpc++].ch,token);
             sym=nextsym();
-            //strcpy(expr[exprpc++].ch,token);
             if(sym==inttype||sym==numtype){
                 sym=nextsym();
-                //strcpy(expr[exprpc++].ch,token);
+                strcpy(factret,ident);
                 return;
             }
             break;
         case inttype:
         case numtype://整数
             sym=nextsym();
-            //strcpy(expr[exprpc++].ch,token);
+            strcpy(factret,ident);
             return;
         case sinquo://字符
             sym=nextsym();
