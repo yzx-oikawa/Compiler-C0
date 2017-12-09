@@ -55,11 +55,12 @@ struct intercodes intercode[MAXINTERLEN];
 int interpc=0;//四元式序列指针
 int interi;   //用来遍历四元式序列的参数
 
-char expr[3][10],ite[3][10];
-int exprpc;
-int itepc;
+
 int exprt=0;
 char exprtemp[20];
+char itemret[20];
+char exprret[20];
+char factret[20];
 
 FILE *IN, *OUT, *INTER;
 int No=1;
@@ -69,6 +70,7 @@ int vardecbegflag=0;//1-变量声明开始
 int vardecendflag=1;//1-变量声明结束
 int braceflag=0;
 int logflag;
+int exprflag=0;
 
 char ch; //字符
 char token[100]; //当前字符串
@@ -113,21 +115,6 @@ int constforcase();
 int strings();//字符串
 int checkiflog();//检查是否登录符号表
 int checkfunclog();//检查函数声明是否登录符号表
-int change();
-
-int change(int pc)
-{
-    if(pc==0)//exprpc
-    {
-        if(exprpc==1) exprpc=2;
-        else if(exprpc==2) exprpc=1;
-    }
-    else if(pc==1)//item
-    {
-        if(itepc==1) itepc=2;
-        else if(itepc==2) itepc=1;
-    }
-}
 
 int checkiflog()//检查是否登录符号表并返回类型
 {
@@ -984,7 +971,7 @@ int valuepara() //值参数表
     {
         expression();
         strcpy(intercode[++interpc].inter0,"push");
-        strcpy(intercode[interpc].inter1,expr[1]);
+        strcpy(intercode[interpc].inter1,exprret);
         if(sym==comma)
         {
 
@@ -1174,9 +1161,8 @@ int strings()
 /*＜表达式＞ ::= ［+｜-］＜项＞{＜加法运算符＞＜项＞}*/
 int expression()//表达式
 {
-    int itemret;
-
-    exprpc=1;
+    char expr[3][10];
+    int exprpc=1;
     printf("\tExpression begin\n");
     fprintf(OUT,"\tExpression begin\n");
     if(sym==add||sym==sub){
@@ -1185,11 +1171,11 @@ int expression()//表达式
     //strcpy(expr[exprpc++].ch,token);
     while(1)
     {
-        itemret=item();
-        strcpy(expr[exprpc],ite[1]);
+        item();
+        strcpy(expr[exprpc],itemret);
         if(sym==add||sym==sub){
-            strcpy(expr[0],token);
-            change(0);
+            if(exprpc==1) exprpc=2;
+            else if(exprpc==2) exprpc=1;
             if(exprpc==1)
             {
                 strcpy(intercode[++interpc].inter0,expr[0]);
@@ -1199,8 +1185,10 @@ int expression()//表达式
                 strcpy(intercode[interpc].inter3,"t");
                 strcat(intercode[interpc].inter3,exprtemp);
                 strcpy(expr[1],intercode[interpc].inter3);
-                change(0);
+                if(exprpc==1) exprpc=2;
+                else if(exprpc==2) exprpc=1;
             }
+            strcpy(expr[0],token);
             sym=nextsym();
             continue;
         }
@@ -1215,6 +1203,7 @@ int expression()//表达式
                 strcat(intercode[interpc].inter3,exprtemp);
                 strcpy(expr[1],intercode[interpc].inter3);
             }
+            strcpy(exprret,expr[1]);
             printf("\tExpression end\n");
             fprintf(OUT,"\tExpression end\n");
             return;
@@ -1225,16 +1214,17 @@ int expression()//表达式
 /*＜项＞ ::= ＜因子＞{＜乘法运算符＞＜因子＞}*/
 int item() //项
 {
-    itepc=1;
+    char ite[3][10];
+    int itepc=1;
     printf("\tItem\n");
     fprintf(OUT,"\tItem\n");
     while(1)
     {
         factor();
-        strcpy(ite[itepc],ident);
+        strcpy(ite[itepc],factret);
         if(sym==mult||sym==divi){
-            strcpy(ite[0],token);
-            change(1);
+            if(itepc==1) itepc=2;
+            else if(itepc==2) itepc=1;
             if(itepc==1)
             {
                 strcpy(intercode[++interpc].inter0,ite[0]);
@@ -1244,8 +1234,11 @@ int item() //项
                 strcpy(intercode[interpc].inter3,"t");
                 strcat(intercode[interpc].inter3,exprtemp);
                 strcpy(ite[1],intercode[interpc].inter3);
-                change(1);
+                if(itepc==1) itepc=2;
+                else if(itepc==2) itepc=1;
             }
+            strcpy(ite[0],token);
+
             sym=nextsym();
             continue;
         }
@@ -1259,9 +1252,9 @@ int item() //项
                 strcpy(intercode[interpc].inter3,"t");
                 strcat(intercode[interpc].inter3,exprtemp);
                 strcpy(ite[1],intercode[interpc].inter3);
-                return 0;
             }
-            return 1;
+            strcpy(itemret,ite[1]);
+            return;
         }
     }
 }
@@ -1297,13 +1290,14 @@ int factor() //因子
                 return;
             }
             else{//标识符
-                //strcpy(ite[itepc],ident);
+                strcpy(factret,ident);
                 return;
             }
             break;
         case lparent://表达式
             sym=nextsym();
             expression();
+            strcpy(factret,exprret);
             if(sym==rparent){//右括号
                 sym=nextsym();
                 //strcpy(expr[exprpc++].ch,token);
