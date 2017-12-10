@@ -56,7 +56,7 @@ int interi;   //用来遍历四元式序列的参数
 /*用于表达式转四元式的返回字符串*/
 int exprt=1; //四元式中的临时变量tn计数
 int labelt=1; //四元式中的标签计数
-int endofcase=1;
+int endofcase=1; //单独给switch语句结束的标签计数
 char exprtemp[MAXIDENTLEN]; //exprt的字符串形式
 char labtemp[MAXIDENTLEN]; //labelt的字符串形式
 char exprret[MAXIDENTLEN]; //表达式返回的字符串
@@ -687,13 +687,16 @@ int statement()
                 sym=nextsym();
                 statement();
                 if(sym==rbrace){
-                    if(braceflag>0){
-                        printf("statement end\n");
-                        fprintf(OUT,"statement end\n");
-                        braceflag--;
-                    }
+                    braceflag--;
+                    printf("statement end\n");
+                    fprintf(OUT,"statement end\n");
                     sym=nextsym();
-                    continue;
+                    if(braceflag>0){
+                        continue;
+                    }
+                    else {
+                        return;
+                    }
                 }
                 else printf("errorlbrace\n");break;
             case identsym:
@@ -787,7 +790,10 @@ int ifstatement() //情况语句
         if(sym==rparent)//右括号
         {
             sym=nextsym();
-            statement();//语句
+            if(sym==semicolon)
+                sym=nextsym();//语句为空
+            else
+                statement();//语句
             strcpy(intercode[++interpc].inter0,"goto");
             itoa(labelt++,labtemp,10);
             strcpy(iflabel,labtemp);
@@ -803,17 +809,26 @@ int ifstatement() //情况语句
                 strcpy(intercode[++interpc].inter0,"Label");
                 strcat(intercode[interpc].inter0,elselabel);
                 strcpy(intercode[interpc].inter1,":");
-                statement();//语句
-                strcpy(intercode[++interpc].inter0,"Label");
-                strcat(intercode[interpc].inter0,iflabel);
-                strcpy(intercode[interpc].inter1,":");
-                if(sym==rbrace)
-                    return;
-                else printf("iferror\n");
+                if(sym==semicolon){//语句为空
+                    sym=nextsym();
+                    strcpy(intercode[++interpc].inter0,"Label");
+                    strcat(intercode[interpc].inter0,iflabel);
+                    strcpy(intercode[interpc].inter1,":");
+                    return;//返回分号后的符号
+                }
+                else{
+                    statement();//语句
+                    strcpy(intercode[++interpc].inter0,"Label");
+                    strcat(intercode[interpc].inter0,iflabel);
+                    strcpy(intercode[interpc].inter1,":");
+                    if(sym==rbrace)
+                        return;
+                    else printf("iferror\n");
+                }
             }
-
         }
     }
+    printf("iferror\n");
 }
 
 /*＜条件＞ ::=  ＜表达式＞＜关系运算符＞＜表达式＞｜＜表达式＞*/
@@ -863,17 +878,30 @@ int whilestatement() //循环语句
         if(sym==rparent)//右括号
         {
             sym=nextsym();
-            statement();//语句
-            strcpy(intercode[++interpc].inter0,"goto");
-            strcpy(intercode[interpc].inter1,"Label");
-            strcat(intercode[interpc].inter1,beginlabel);
-            //循环结束
-            strcpy(intercode[++interpc].inter0,"Label");
-            strcat(intercode[interpc].inter0,endlabel);
-            strcpy(intercode[interpc].inter1,":");
-            if(sym==rbrace)
-                return;
-            else printf("whileerror\n");
+            if(sym==semicolon){//语句为空
+                //sym=nextsym();
+                strcpy(intercode[++interpc].inter0,"goto");
+                strcpy(intercode[interpc].inter1,"Label");
+                strcat(intercode[interpc].inter1,beginlabel);
+                //循环结束
+                strcpy(intercode[++interpc].inter0,"Label");
+                strcat(intercode[interpc].inter0,endlabel);
+                strcpy(intercode[interpc].inter1,":");
+                return;//返回分号后的符号
+            }
+            else{
+                statement();//语句
+                strcpy(intercode[++interpc].inter0,"goto");
+                strcpy(intercode[interpc].inter1,"Label");
+                strcat(intercode[interpc].inter1,beginlabel);
+                //循环结束
+                strcpy(intercode[++interpc].inter0,"Label");
+                strcat(intercode[interpc].inter0,endlabel);
+                strcpy(intercode[interpc].inter1,":");
+                if(sym==rbrace)
+                    return;
+            }
+            printf("whileerror\n");
         }
     }
 }
@@ -942,7 +970,12 @@ int casestatement(char *switchlabel) //情况子语句
             if(sym==colon)//冒号
             {
                 sym=nextsym();
-                statement();//语句 可能返回右花括号、case、default
+                if(sym==semicolon){//语句为空
+                    sym=nextsym();//可能返回右花括号、case、default
+                }
+                else{
+                    statement();//语句 可能返回右花括号、case、default
+                }
                 //结束switch
                 strcpy(intercode[++interpc].inter0,"goto");
                 strcpy(intercode[interpc].inter1,"Labeleoc");
@@ -983,9 +1016,13 @@ int defaultstatement() //缺省
         if(sym==colon)//冒号
         {
             sym=nextsym();
-            statement();//语句
+            if(sym==semicolon)//语句为空
+                sym=nextsym();//返回右花括号
+            else
+                statement();//语句
         }
     }
+    return;
 }
 
 /*＜有返回值函数调用语句＞ ::= ＜标识符＞‘(’＜值参数表＞‘)’|<标识符>*/
@@ -1132,21 +1169,23 @@ int returnstatement() //返回语句
 {
     printf("Return statement\n");
     fprintf(OUT,"Return statement\n");
-    strcpy(intercode[++interpc].inter0,"ret");
     sym=nextsym();
     //sym此时为return
     if(sym==lparent)//左括号
     {
 		sym=nextsym();
         expression();
+        strcpy(intercode[++interpc].inter0,"ret");
         strcpy(intercode[interpc].inter1,exprret);
         if(sym==rparent){//右括号
             sym=nextsym();
             return;
         }
     }
-    else//分号
+    else{//分号
+        strcpy(intercode[++interpc].inter0,"ret");
         return;
+    }
 }
 
 /*＜常量＞ ::=  ＜整数＞|＜字符＞
@@ -1429,8 +1468,11 @@ int nextsym()
     memset(token, 0, sizeof(token)); //清空数组！
     ch=fgetc(IN);
     if(feof(IN)) return -1;
-    if(ch=='0')//如果是零，直接返回
+    if(ch=='0'){//如果是零，直接返回
+        token[t]='0';
+        strcpy(ident,token);
         return numtype;
+    }
     if(isdigit(ch))//如果是非零数字
     {
         token[t]=ch;

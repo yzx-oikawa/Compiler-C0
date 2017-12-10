@@ -1,0 +1,154 @@
+0	1	2	3
+const	int	one	1
+const	int	two	2
+const	char	ch	c
+const	char	st	s
+var	int	s	
+var	int	sum	10
+func	void	getsum	
+para	int	n	
+>	n	100	
+bz	Label1		
+goto	Label2		
+Label1	:		
+<=	s	n	
+bz	Label3		
++	sum	s	t1
+assign	t1		sum
++	s	1	t2
+assign	t2		s
+call	getsum		
+push	n		
+goto	Label4		
+Label3	:		
+print	=		
+print		sum	
+Label4	:		
+Label2	:		
+func	int	reverse	
+para	int	n	
+var	int	j	
+var	int	na	100
+assign	0		j
+>	n	100	
+bz	Label5		
+oppo			1
+ret	1		
+goto	Label6		
+Label5	:		
+Label6	:		
+Label7	:		
+<	j	n	
+bz	Label8		
+-	n	1	t3
+-	t3	j	t4
++	j	1	t5
+arrass	t5	t4	na
++	j	1	t6
+assign	t6		j
+goto	Label7		
+Label8	:		
+print	sum:		
+arrget	na	0	t7
+print		t7	
+assign	1		j
+Label9	:		
+<	j	n	
+bz	Label10		
+print	+		
+arrget	na	j	t8
+print		t8	
++	j	1	t9
+assign	t9		j
+goto	Label9		
+Label10	:		
+/	n	2	t10
+*	t10	2	t11
+==	t11	n	
+bz	Label11		
+ret	1		
+goto	Label12		
+Label11	:		
+ret	0		
+Label12	:		
+func	void	main	
+var	int	x	
+var	int	y	
+var	int	n	
+var	int	m	
+var	int	i	
+var	int	a	
+var	char	c	
+var	char	r	
+assign	1		s
+assign	0		sum
+scan	x		
+scan	y		
+scan	c		
+scan	n		
+assign	x		m
+assign	2		a
+assign	1		i
+<	x	y	
+bz	Label13		
+assign	y		x
+assign	m		y
+goto	Label14		
+Label13	:		
+Label14	:		
+Label15	:		
+<=	i	y	
+bz	Label16		
+/	x	i	t12
+*	t12	i	t13
+==	t13	x	
+bz	Label17		
+/	y	i	t14
+*	t14	i	t15
+==	t15	y	
+bz	Label18		
+assign	i		a
+goto	Label19		
+Label18	:		
+Label19	:		
+goto	Label20		
+Label17	:		
+Label20	:		
++	i	1	t16
+assign	t16		i
+goto	Label15		
+Label16	:		
+*	x	y	t17
+/	t17	a	t18
+assign	t18		m
+==	c	g	
+bz	Label21		
+print	gcd:		
+print		a	
+goto	Labeleoc1		
+Label21	:		
+==	c	l	
+bz	Label22		
+print	lcm:		
+print		m	
+goto	Labeleoc1		
+Label22	:		
+print	error		
+Labeleoc1	:		
+call	reverse		
+push	n		
+assign	ret		r
+call	getsum		
+push	n		
+==	r	0	
+bz	Label23		
+print	nisodd		
+goto	Labeleoc2		
+Label23	:		
+==	r	1	
+bz	Label24		
+print	niseven		
+goto	Labeleoc2		
+Label24	:		
+print	error		
+Labeleoc2	:		
