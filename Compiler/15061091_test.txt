@@ -1,7 +1,12 @@
-const Int one = 1, two = 2;
-const char ch = 'c', st = 's'; 
+const Int one = 1;
+const char ch = 'c'; 
 int s, sum[10];
-void Getsum(int n)
+char c;
+char getch()
+{
+	c=ch;
+}
+void Getsum(int n, int p)
 {
 	if(n>100);
 	else{
@@ -43,8 +48,9 @@ int reverse(int n)
 }
 void main()
 {
+	const int ten=10;
     int x,y,n,m,i,a;
-	char c,r;
+	char r;
 	s=1;
 	sum=0;
 	scanf(x,y,c,n);

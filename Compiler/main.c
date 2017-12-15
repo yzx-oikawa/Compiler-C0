@@ -7,6 +7,7 @@
 #define MAXSYMTABLEN 100 //符号表最大长度
 #define MAXINTERCODE 10  //四元式每一项最大长度
 #define MAXINTERLEN 500  //四元式序列最大长度
+#define MAXASSEMLEN 10  //汇编代码每一项最大长度
 
 const char *keyword[]={"const","int","char","void","main","if","else","while","switch","case",
                        "default","scanf","printf","return"};
@@ -64,7 +65,11 @@ char factret[MAXIDENTLEN]; //因子返回的字符串
 char itemret[MAXIDENTLEN]; //项返回的字符串
 char strret[MAXIDENTLEN];  //写语句打印的字符串
 
-FILE *IN, *OUT, *INTER;
+int assems=0;
+char assemtemp[MAXASSEMLEN]; //assems的字符串形式
+
+
+FILE *IN, *OUT, *INTER, *ASSEM;
 int No=1;
 
 int blankflag=0; //0-跳过空格 1-不跳过空格
@@ -72,6 +77,7 @@ int vardecbegflag=0;//1-变量声明开始
 int vardecendflag=1;//1-变量声明结束
 int braceflag=0;
 int logflag;
+int gotomainflag=0;//编译时先跳转到main
 
 char ch; //字符
 char token[MAXIDENTLEN]; //当前字符串
@@ -115,7 +121,207 @@ int constant();//常量
 int constforcase();
 int strings();//字符串
 int checkiflog();//检查是否登录符号表
-int checkfunclog();//检查函数声明是否登录符号表
+int checkiftn();//检查是否为四元式的中间变量并返回序号
+int checkiflab();//检查是否为四元式的label并返回序号
+void inter2assem();//四元式转汇编
+
+void inter2assem()
+{
+    //fp-$t0
+    //sp-$t1
+    //保存tn-$t2
+    //每次操作使用的寄存器：$s0,$s1,$s2
+    symloca=0;
+    int op=0;//0-add 1-sub 2-mult 3-divi
+    fprintf(ASSEM,".data\n.text\n");
+    fprintf(ASSEM,"\tli $t0, 0x00000000\n");
+    fprintf(ASSEM,"\tli $t1, 0x00000000\n");
+    fprintf(ASSEM,"\tli $t2, 0x00000f00\n");
+    for(interi=1;interi<=interpc;interi++)
+    {
+        //常量定义
+        if(strcmp(intercode[interi].inter0,"const")==0)
+        {
+            strcpy(token,intercode[interi].inter2);
+            //全局常量定义
+            if(checkiflog()==0&&symtab[tabi].location==0)
+            {
+                fprintf(ASSEM,"\tli $s0,%d\n",symtab[tabi].value);
+                fprintf(ASSEM,"\tsw $s0,0($t0)\n");
+                //移动fp
+                fprintf(ASSEM,"\taddi $t0,$t0,4\n");
+                //移动sp
+                fprintf(ASSEM,"\tor $t1,$0,$t0\n");
+            }
+            //局部常量定义
+            if(checkiflog()==0&&symtab[tabi].location>0)
+            {
+                fprintf(ASSEM,"\tli $s0,%d\n",symtab[tabi].value);
+                fprintf(ASSEM,"\tsw $s0,0($t1)\n");
+                //移动sp
+                fprintf(ASSEM,"\taddi $t1,$t1,4\n");
+            }
+
+        }
+        //变量定义
+        else if(strcmp(intercode[interi].inter0,"var")==0)
+        {
+            strcpy(token,intercode[interi].inter2);
+            //全局变量定义
+            if(checkiflog()==1&&symtab[tabi].location==0)
+            {
+                //移动fp
+                fprintf(ASSEM,"\taddi $t0,$t0,%d\n",symtab[tabi].length==0?4:symtab[tabi].length*4);
+                //移动sp
+                fprintf(ASSEM,"\tor $t1,$0,$t0\n");
+            }
+            //局部变量定义
+            if(checkiflog()==1&&symtab[tabi].location>0)
+            {
+                //移动sp
+                fprintf(ASSEM,"\taddi $t1,$t1,%d\n",symtab[tabi].length==0?4:symtab[tabi].length*4);
+            }
+        }
+        //函数定义
+        else if(strcmp(intercode[interi].inter0,"func")==0)
+        {
+            if(gotomainflag==0)
+            {
+                fprintf(ASSEM,"\tj Label_main\n");
+                gotomainflag=1;
+            }
+            symloca++;
+            strcpy(token,intercode[interi].inter2);
+            //有返回值函数定义
+            if(strcmp(intercode[interi].inter1,"int")==0
+            ||strcmp(intercode[interi].inter1,"char")==0)
+            {
+                if(checkiflog()==3)
+                    fprintf(ASSEM,"Label_%s:\n",token);
+            }
+            //无返回值函数定义
+            else if(strcmp(intercode[interi].inter1,"void")==0)
+            {
+                if(checkiflog()==2)
+                    fprintf(ASSEM,"Label_%s:\n",token);
+            }
+        }
+        //参数定义
+        else if(strcmp(intercode[interi].inter0,"para")==0)
+        {
+            strcpy(token,intercode[interi].inter2);
+            if(checkiflog()==4)
+            //移动sp
+            fprintf(ASSEM,"\taddi $t1,$t1,4\n");
+        }
+        //赋值语句
+        else if(strcmp(intercode[interi].inter0,"assign")==0)
+        {
+            //被赋的值
+            strcpy(token,intercode[interi].inter1);
+            if(strcmp(token,"ret")==0)//返回值赋给变量 x=ret;
+               fprintf(ASSEM,"\t#assign ret\n");
+            if(checkiflog()==0||checkiflog()==1||checkiflog()==4)//常量或变量或参数赋给变量 x=y;
+            {
+                if(symtab[tabi].location==0)//全局常变量
+                    fprintf(ASSEM,"\tlw $s0,%d($0)\n",symtab[tabi].address);
+                else//局部常变量
+                    fprintf(ASSEM,"\tlw $s0,%d($t0)\n",symtab[tabi].address);
+            }
+            else if(checkiftn()>0)//tn赋给变量 x=t1;
+                fprintf(ASSEM,"\tlw $s0,%d($t2)\n",checkiftn()*4);
+            else//立即数赋给变量 x=1;
+                fprintf(ASSEM,"\tori $s0,$0,%s\n",token);
+
+            //赋给的值
+            strcpy(token,intercode[interi].inter3);
+            if(checkiflog()==1)
+            {
+                if(symtab[tabi].location==0)//全局变量
+                    fprintf(ASSEM,"\tsw $s0,%d($0)\n",symtab[tabi].address);
+                else //局部变量
+                    fprintf(ASSEM,"\tsw $s0,%d($t0)\n",symtab[tabi].address);
+            }
+        }
+        //加减乘除
+        else if(strcmp(intercode[interi].inter0,"+")==0||
+                strcmp(intercode[interi].inter0,"-")==0||
+                strcmp(intercode[interi].inter0,"*")==0||
+                strcmp(intercode[interi].inter0,"/")==0)
+        {
+            if(strcmp(intercode[interi].inter0,"+")==0)
+                op=0;
+            else if(strcmp(intercode[interi].inter0,"-")==0)
+                op=1;
+            else if(strcmp(intercode[interi].inter0,"*")==0)
+                op=2;
+            else if(strcmp(intercode[interi].inter0,"/")==0)
+                op=3;
+            //第一个操作数
+            strcpy(token,intercode[interi].inter1);
+            //fprintf(ASSEM,"%d\n",checkiflog());
+            if(checkiflog()==0||checkiflog()==1||checkiflog()==4)//常量或变量或参数
+            {
+                if(symtab[tabi].location==0)//全局常变量
+                    fprintf(ASSEM,"\tlw $s1,%d($0)\n",symtab[tabi].address);
+                else//局部常变量
+                    fprintf(ASSEM,"\tlw $s1,%d($t0)\n",symtab[tabi].address);
+            }
+            else if(checkiftn()>0)//tn
+                fprintf(ASSEM,"\tlw $s1,%d($t2)\n",checkiftn()*4);
+            else//立即数
+                fprintf(ASSEM,"\tori $s1,$0,%s\n",token);
+
+            //第二个操作数
+            strcpy(token,intercode[interi].inter2);
+            if(checkiflog()==0||checkiflog()==1||checkiflog()==4)//常量或变量或参数
+            {
+                if(symtab[tabi].location==0)//全局常变量
+                    fprintf(ASSEM,"\tlw $s2,%d($0)\n",symtab[tabi].address);
+                else//局部常变量
+                    fprintf(ASSEM,"\tlw $s2,%d($t0)\n",symtab[tabi].address);
+            }
+            else if(checkiftn()>0)//tn
+                fprintf(ASSEM,"\tlw $s2,%d($t2)\n",checkiftn()*4);
+            else//立即数
+                fprintf(ASSEM,"\tori $s2,$0,%s\n",token);
+
+            //加减乘除操作
+            fprintf(ASSEM,"%d\n",op);
+            if(op==0)//加法
+                fprintf(ASSEM,"\tadd $s0,$s1,$s2\n");
+            else if(op==1)//减法
+                fprintf(ASSEM,"\tsub $s0,$s1,$s2\n");
+            else if(op==2)//乘法
+                fprintf(ASSEM,"\tmul $s0,$s1,$s2\n");
+            else if(op==3)//除法
+                fprintf(ASSEM,"\tdiv $s0,$s1,$s2\n");
+
+            //运算结果
+            strcpy(token,intercode[interi].inter3);
+            if(checkiflog()==1||checkiflog()==4)//变量或参数
+            {
+                if(symtab[tabi].location==0)//全局变量
+                    fprintf(ASSEM,"\tsw $s0,%d($0)\n",symtab[tabi].address);
+                else //局部变量
+                    fprintf(ASSEM,"\tsw $s0,%d($t0)\n",symtab[tabi].address);
+            }
+            else if(checkiftn()>0)//tn
+                fprintf(ASSEM,"\tsw $s0,%d($t2)\n",checkiftn()*4);
+        }
+        //Label:
+        else if(strcmp(intercode[interi].inter1,":")==0)
+        {
+            fprintf(ASSEM,"%s:\n",intercode[interi].inter0);
+        }
+        //goto Label
+        else if(strcmp(intercode[interi].inter0,"goto")==0)
+        {
+            fprintf(ASSEM,"\tj %s\n",intercode[interi].inter1);
+        }
+        fprintf(ASSEM,"\n");
+    }
+}
 
 int checkiflog()//检查是否登录符号表并返回类型
 {
@@ -131,13 +337,109 @@ int checkiflog()//检查是否登录符号表并返回类型
                     return 2;
                 else if(symtab[tabi].kind==2&&symtab[tabi].value==1)//有返函数
                     return 3;
-                else if(symtab[tabi].kind==3)
+                else if(symtab[tabi].kind==3)//是参数
                     return 4;
             }
-           }
+        }
     }
     return -1;//未登录
 }
+
+int checkiftn()//检查是否为四元式的中间变量并返回序号
+{
+    int i;
+    int num=0;
+    if(token[0]=='t')
+    {
+        for(i=1;i<=3;i++)
+        {
+            if(token[i]>='0'&&token[i]<='9')//是数字
+                num=num*10+(token[i]-'0');
+        }
+    }
+    return num;
+}
+
+
+//        //scanf
+//        /*li   $v0, 12 # input a
+//          syscall
+//          move $s1, $v0*/
+//        else if(strcmp(intercode[interi].inter0,"scan")==0)
+//        {
+//            strcpy(token,intercode[interi].inter1);
+//            if(checkiflog()>=0)//读值，存入标识符
+//            {
+//                fprintf(ASSEM,"li $v0,12\n");
+//                fprintf(ASSEM,"syscall\n");
+//                //temp1保存被取到哪个寄存器
+//                strcpy(temp1,"$s");
+//                itoa(tabi,tabtemp,10);
+//                strcat(temp1,tabtemp);
+//                fprintf(ASSEM,"move %s,$v0\n",temp1);
+//            }
+//        }
+//        //printf
+//        /*lw $a0, 4($s2)# output
+//          li  $v0, 11
+//          syscall
+//          la   $a0, messege # output
+//          li   $v0, 4
+//          syscall*/
+//        else if(strcmp(intercode[interi].inter0,"print")==0)
+//        {
+//            //打印字符串
+//            strcpy(token,intercode[interi].inter1);
+//            //printf("%d ",token[0]);
+//            //printf("%d\n",'\0');
+//            if(token[0]!='\0')
+//            {
+//                fprintf(ASSEM,"la $a0,%s\n",token);
+//                fprintf(ASSEM,"li $v0,4\n");
+//                fprintf(ASSEM,"syscall\n");
+//            }
+//            //打印表达式
+//            strcpy(token,intercode[interi].inter2);
+//            if(checkiflog()>=0)//打印标识符
+//            {
+//                fprintf(ASSEM,"lw $a0,%d($a0)\n",symtab[tabi].address);
+//                fprintf(ASSEM,"li $v0,11\n");
+//                fprintf(ASSEM,"syscall\n");
+//            }
+//            else
+//            {
+//                tn=checkiftn();
+//                if(tn>0)//打印中间变量
+//                {
+//                    fprintf(ASSEM,"lw $a0,%d($a1)\n",4*tn);
+//                    fprintf(ASSEM,"li $v0,11\n");
+//                    fprintf(ASSEM,"syscall\n");
+//                }
+//                else//被赋的值是立即数
+//                {
+//                    strcpy(temp2,token);
+//                    fprintf(ASSEM,"li $a0,%s\n",temp2);
+//                    fprintf(ASSEM,"li $v0,11\n");
+//                    fprintf(ASSEM,"syscall\n");
+//                }
+//            }
+//        }
+//    }
+//}
+
+
+
+int checkiflab()//检查是否为四元式的label并返回序号
+{
+    int i;
+    int num=0;
+    if(token[0]=='L'&&token[0]=='a'&&token[0]=='b'
+                    &&token[0]=='e'&&token[0]=='l')
+        num=1;
+    return num;
+}
+
+
 
 /*＜常量说明＞ ::=  const＜常量定义＞;{ const＜常量定义＞;}*/
 int constdec()
@@ -183,6 +485,8 @@ int constdef()
                     strcpy(symtab[++tabpc].name,token);
                     symtab[tabpc].kind=0;//常量
                     symtab[tabpc].type=1;//int
+                    symtab[tabpc].address=symaddr;//地址
+                    symaddr+=4;
                     symtab[tabpc].location=symloca;//函数位置
                     strcpy(intercode[++interpc].inter0,"const");
                     strcpy(intercode[interpc].inter1,"int");
@@ -230,6 +534,8 @@ int constdef()
                     strcpy(symtab[++tabpc].name,token);
                     symtab[tabpc].kind=0;//常量
                     symtab[tabpc].type=0;//char
+                    symtab[tabpc].address=symaddr;//地址
+                    symaddr+=4;
                     symtab[tabpc].location=symloca;//函数位置
                     strcpy(intercode[++interpc].inter0,"const");
                     strcpy(intercode[interpc].inter1,"char");
@@ -323,6 +629,8 @@ int vardef()
                 strcpy(symtab[++tabpc].name,token);
                 symtab[tabpc].kind=1;//变量
                 symtab[tabpc].type=symtype;
+                symtab[tabpc].address=symaddr;//地址
+                symaddr+=4;
                 symtab[tabpc].location=symloca;//函数位置
                 strcpy(intercode[++interpc].inter0,"var");
                 strcpy(intercode[interpc].inter1,symtype==1?"int":"char");
@@ -340,8 +648,10 @@ int vardef()
                     //登录符号表-长度
                     if(logflag==-1){
                         symtab[tabpc].length=symnum;
+                        symaddr+=4*(symnum-1);
                         strcpy(intercode[interpc].inter3,token);
                     }
+
                     sym=nextsym();
                     if(sym==rbracket)//右方括号
                     {
@@ -363,6 +673,7 @@ int vardef()
             //登录符号表-长度
             if(logflag==-1){
                 symtab[tabpc].length=symnum;
+                symaddr+=4*(symnum-1);
                 strcpy(intercode[interpc].inter3,token);
             }
             sym=nextsym();
@@ -403,6 +714,8 @@ int differ()
             {
                 if(logflag==-1){
                     symtab[tabpc].kind=1;//变量
+                    symtab[tabpc].address=symaddr;
+                    symaddr+=4;
                     strcpy(intercode[interpc].inter0,"var");
                 }
                 vardec();
@@ -417,8 +730,11 @@ int differ()
                     if(logflag==-1){
                         symtab[tabpc].kind=2;//函数
                         symtab[tabpc].value=1;//有返回值
-                        symloca=tabpc+1;
+                        symloca++;
                         symtab[tabpc].location=symloca;
+                        symaddr=0;
+                        symtab[tabpc].address=symaddr;
+                        symaddr+=4;
                         strcpy(intercode[interpc].inter0,"func");
                     }
                     retfuncdef();
@@ -486,7 +802,8 @@ int voidfuncdef()
     //sym是标识符
     printf("Voidfuncdef begin:\n");
     fprintf(OUT,"Voidfuncdef begin:\n");
-    symloca=tabpc+1;
+    symaddr=0;
+    symloca++;
     while(1)
     {
         if(sym==identsym||sym==chartype)//标识符
@@ -496,6 +813,8 @@ int voidfuncdef()
                 strcpy(symtab[++tabpc].name,token);
                 symtab[tabpc].kind=2;//函数
                 symtab[tabpc].type=0;
+                symtab[tabpc].address=symaddr;
+                symaddr+=4;
                 symtab[tabpc].value=0;//无返回值
                 symtab[tabpc].location=symloca;//函数位置
                 strcpy(intercode[++interpc].inter0,"func");
@@ -513,8 +832,8 @@ int voidfuncdef()
                     symtab[tabpc-sympara-1].length=sympara+1;//全局常量、全局变量
                 if(sym==rparent)//右括号
                 {
-                    sym=nextsym();                    symtab[tabpc-sympara-1].length=sympara+1;//全局常量、全局变量
-
+                    sym=nextsym();
+                    symtab[tabpc-sympara-1].length=sympara+1;//全局常量、全局变量
                     if(sym==lbrace)//左花括号
                     {
                         sym=nextsym();
@@ -564,6 +883,8 @@ int parameters()//参数表
                     strcpy(symtab[++tabpc].name,token);
                     symtab[tabpc].kind=3;//参数
                     symtab[tabpc].type=symtype;
+                    symtab[tabpc].address=symaddr;
+                    symaddr+=4;
                     symtab[tabpc].location=symloca;//函数位置
                     strcpy(intercode[++interpc].inter0,"para");
                     strcpy(intercode[interpc].inter1,symtype==1?"int":"char");
@@ -592,7 +913,15 @@ int mainfunc()
     //sym此时为main
     printf("Mainfunc begin:\n");
     fprintf(OUT,"Mainfunc begin:\n");
-    symloca=tabpc+1;
+    symaddr=0;
+    symloca++;
+    strcpy(symtab[++tabpc].name,token);
+    symtab[tabpc].kind=2;//函数
+    symtab[tabpc].type=0;
+    symtab[tabpc].address=symaddr;
+    symaddr+=4;
+    symtab[tabpc].value=0;//无返回值
+    symtab[tabpc].location=symloca;//函数位置
     strcpy(intercode[++interpc].inter0,"func");
     strcpy(intercode[interpc].inter1,"void");
     strcpy(intercode[interpc].inter2,"main");
@@ -1647,6 +1976,7 @@ int main()
     IN = fopen("15061091_test.txt","r");
     OUT = fopen("15061091_result.txt","w");
     INTER = fopen("C:\\Users\\Administrator\\Desktop\\inter.txt","w");
+    ASSEM = fopen("C:\\Users\\Administrator\\Desktop\\assem.txt","w");
     /*C:\\Users\\Administrator\\Desktop\\*/
     if(IN == NULL){
         printf("NO SUCH FILE!\n");
@@ -1692,6 +2022,7 @@ int main()
                 intercode[interi].inter0,intercode[interi].inter1,
                 intercode[interi].inter2,intercode[interi].inter3);
         }
+        inter2assem();
     }
     return 0;
 }

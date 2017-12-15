@@ -5,7 +5,18 @@ Constdec begin:
 Constdec end
 Vardec begin:
 	Vardef
+	Vardef
 Vardec end
+Retfuncdef begin:
+	Parameters
+Statements begin:
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+Statements end
+Retfuncdef end:
 Voidfuncdef begin:
 	Parameters
 Statements begin:
@@ -193,6 +204,9 @@ Statements end
 Retfuncdef end:
 Mainfunc begin:
 Statements begin:
+Constdec begin:
+	Constdef
+Constdec end
 Vardec begin:
 	Vardef
 	Vardef
@@ -355,6 +369,13 @@ Write statement
 Default statement
 Write statement
 	String
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Expression end
 Statements end
 Mainfunc end
 Program end
