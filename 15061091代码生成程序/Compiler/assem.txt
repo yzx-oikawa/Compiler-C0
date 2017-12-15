@@ -1,0 +1,234 @@
+.data
+.text
+li $a0, 0x00000000
+li $a1, 0x10000000
+li $s0,1
+sw $s0,0($a0)
+li $s0,2
+sw $s0,4($a0)
+li $s0,99
+sw $s0,8($a0)
+li $s0,115
+sw $s0,12($a0)
+j Label2
+Label1:
+lw $s6,20($a0)
+lw $s5,16($a0)
+add $t1,$s6,$s5
+sw $t1,4($a1)
+lw $t1,4($a1)
+or $s6,$0,$t1
+sw $s6,20($a0)
+lw $s5,16($a0)
+addi $t2,$s5,1
+sw $t2,8($a1)
+lw $t2,8($a1)
+or $s5,$0,$t2
+sw $s5,16($a0)
+j Label4
+Label3:
+la $a0,=
+li $v0,4
+syscall
+lw $a0,0($a0)
+li $v0,11
+syscall
+lw $a0,20($a0)
+li $v0,11
+syscall
+Label4:
+Label2:
+j Label6
+Label5:
+Label6:
+Label7:
+lw $s15,488($a0)
+subi $t3,$s15,1
+sw $t3,12($a1)
+lw $t3,12($a1)
+subi $t4,$t3,j
+sw $t4,16($a1)
+subi $t5,j,1
+sw $t5,20($a1)
+subi $t6,j,1
+sw $t6,24($a1)
+lw $t6,24($a1)
+j Label7
+Label8:
+la $a0,sum:
+li $v0,4
+syscall
+lw $a0,0($a0)
+li $v0,11
+syscall
+lw $a0,28($a1)
+li $v0,11
+syscall
+Label9:
+la $a0,+
+li $v0,4
+syscall
+lw $a0,0($a0)
+li $v0,11
+syscall
+lw $a0,32($a1)
+li $v0,11
+syscall
+subi $t9,j,1
+sw $t9,36($a1)
+lw $t9,36($a1)
+j Label9
+Label10:
+lw $s15,488($a0)
+li $a3,2
+mult $s15,$a3
+mflo $t10
+sw $t10,40($a1)
+lw $t10,40($a1)
+li $a3,2
+mult $t10,$a3
+mflo $t11
+sw $t11,44($a1)
+j Label12
+Label11:
+Label12:
+ori $s5,$0,1
+sw $s5,16($a0)
+ori $s6,$0,0
+sw $s6,20($a0)
+li $v0,12
+syscall
+move $s13,$v0
+li $v0,12
+syscall
+move $s14,$v0
+li $v0,12
+syscall
+move $s19,$v0
+li $v0,12
+syscall
+move $s15,$v0
+lw $s13,480($a0)
+or $s16,$0,$s13
+sw $s16,492($a0)
+ori $s18,$0,2
+sw $s18,500($a0)
+ori $s17,$0,1
+sw $s17,496($a0)
+lw $s14,484($a0)
+or $s13,$0,$s14
+sw $s13,480($a0)
+lw $s16,492($a0)
+or $s14,$0,$s16
+sw $s14,484($a0)
+j Label14
+Label13:
+Label14:
+Label15:
+lw $s13,480($a0)
+lw $s17,496($a0)
+mult $s13,$s17
+mflo $t12
+sw $t12,48($a1)
+lw $t12,48($a1)
+lw $s17,496($a0)
+mult $t12,$s17
+mflo $t13
+sw $t13,52($a1)
+lw $s14,484($a0)
+lw $s17,496($a0)
+mult $s14,$s17
+mflo $t14
+sw $t14,56($a1)
+lw $t14,56($a1)
+lw $s17,496($a0)
+mult $t14,$s17
+mflo $t15
+sw $t15,60($a1)
+lw $s17,496($a0)
+or $s18,$0,$s17
+sw $s18,500($a0)
+j Label19
+Label18:
+Label19:
+j Label20
+Label17:
+Label20:
+lw $s17,496($a0)
+subi $t16,$s17,1
+sw $t16,64($a1)
+lw $t16,64($a1)
+or $s17,$0,$t16
+sw $s17,496($a0)
+j Label15
+Label16:
+lw $s13,480($a0)
+lw $s14,484($a0)
+mult $s13,$s14
+mflo $t17
+sw $t17,68($a1)
+lw $t17,68($a1)
+lw $s18,500($a0)
+mult $t17,$s18
+mflo $t18
+sw $t18,72($a1)
+lw $t18,72($a1)
+or $s16,$0,$t18
+sw $s16,492($a0)
+la $a0,gcd:
+li $v0,4
+syscall
+lw $a0,0($a0)
+li $v0,11
+syscall
+lw $a0,500($a0)
+li $v0,11
+syscall
+j Labeleoc1
+Label21:
+la $a0,lcm:
+li $v0,4
+syscall
+lw $a0,0($a0)
+li $v0,11
+syscall
+lw $a0,492($a0)
+li $v0,11
+syscall
+j Labeleoc1
+Label22:
+la $a0,error
+li $v0,4
+syscall
+lw $a0,0($a0)
+li $v0,11
+syscall
+Labeleoc1:
+ori $s20,$0,ret
+sw $s20,508($a0)
+la $a0,nisodd
+li $v0,4
+syscall
+lw $a0,0($a0)
+li $v0,11
+syscall
+j Labeleoc2
+Label23:
+la $a0,niseven
+li $v0,4
+syscall
+lw $a0,0($a0)
+li $v0,11
+syscall
+j Labeleoc2
+Label24:
+la $a0,error
+li $v0,4
+syscall
+lw $a0,0($a0)
+li $v0,11
+syscall
+Labeleoc2:
+li $a0,1
+li $v0,11
+syscall
