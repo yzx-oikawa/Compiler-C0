@@ -127,19 +127,31 @@ void inter2assem();//四元式转汇编
 
 void inter2assem()
 {
-    //保存tn-$t0
     //每次操作使用的寄存器：$s0,$s1,$s2
     symloca=0;
     int op=0;//0-add 1-sub 2-mult 3-divi
+    int con=0;//0== 1!= 2< 3<= 4> 5>=
     int numofpara=0, parai;
     int arrayaddr;
     char funcname[MAXIDENTLEN];
-    fprintf(ASSEM,".data\n.text\n");
-    fprintf(ASSEM,"\tli $fp, 0x00000000\n");
-    fprintf(ASSEM,"\tli $sp, 0x00000000\n");
-    fprintf(ASSEM,"\tli $t0, 0x00001800\n");
+    fprintf(ASSEM,".kdata\n");
+    fprintf(ASSEM,"enter: .ASCIIZ \"\\n\"\n");
     for(interi=1;interi<=interpc;interi++)
     {
+        if(strcmp(intercode[interi].inter0,"print")==0
+                &&intercode[interi].inter1[0]!='\0')
+        {
+            fprintf(ASSEM,"str%s: .ASCIIZ \"%s\"\n",intercode[interi].inter1,intercode[interi].inter1);
+
+        }
+    }
+    fprintf(ASSEM,".text\n");
+    fprintf(ASSEM,"\tli $fp, 0x00000000\n");
+    fprintf(ASSEM,"\tli $sp, 0x00000000\n");
+    fprintf(ASSEM,"\tli $t0, 0x00002000\n");
+    for(interi=1;interi<=interpc;interi++)
+    {
+        memset(token, 0, sizeof(token));
         //常量定义
         if(strcmp(intercode[interi].inter0,"const")==0)
         {
@@ -230,6 +242,27 @@ void inter2assem()
             if(checkiflog()==4)
             //移动sp
             fprintf(ASSEM,"\taddi $sp,$sp,4\n");
+        }
+        //取相反数
+        else if(strcmp(intercode[interi].inter0,"oppo")==0)
+        {
+            strcpy(token,intercode[interi].inter3);
+            if(strcmp(token,"ret")==0)//返回值
+            {
+                fprintf(ASSEM,"\tlw $s0,8($sp)\n");
+            }
+            else if(checkiflog()==0||checkiflog()==1||checkiflog()==4)//常量或变量或参数
+            {
+                if(symtab[tabi].location==0)//全局常变量
+                    fprintf(ASSEM,"\tlw $s0,%d($0)\n",symtab[tabi].address);
+                else//局部常变量
+                    fprintf(ASSEM,"\tlw $s0,%d($fp)\n",symtab[tabi].address);
+            }
+            else if(checkiftn()>0)//tn
+                fprintf(ASSEM,"\tlw $s0,%d($t0)\n",checkiftn()*4);
+            else//立即数
+                fprintf(ASSEM,"\tori $s0,$0,%s\n",token);
+            fprintf(ASSEM,"\tsub $s0,$0,$s0\n");
         }
         //赋值语句
         else if(strcmp(intercode[interi].inter0,"assign")==0)
@@ -394,26 +427,16 @@ void inter2assem()
 
         }
         //加减乘除
-        else if(strcmp(intercode[interi].inter0,"+")==0||
-                strcmp(intercode[interi].inter0,"-")==0||
-                strcmp(intercode[interi].inter0,"*")==0||
-                strcmp(intercode[interi].inter0,"/")==0)
+        else if(strcmp(intercode[interi].inter0,"+")==0||strcmp(intercode[interi].inter0,"-")==0||
+                strcmp(intercode[interi].inter0,"*")==0||strcmp(intercode[interi].inter0,"/")==0)
         {
-            if(strcmp(intercode[interi].inter0,"+")==0)
-                op=0;
-            else if(strcmp(intercode[interi].inter0,"-")==0)
-                op=1;
-            else if(strcmp(intercode[interi].inter0,"*")==0)
-                op=2;
-            else if(strcmp(intercode[interi].inter0,"/")==0)
-                op=3;
+            if(strcmp(intercode[interi].inter0,"+")==0) op=0;
+            else if(strcmp(intercode[interi].inter0,"-")==0) op=1;
+            else if(strcmp(intercode[interi].inter0,"*")==0) op=2;
+            else if(strcmp(intercode[interi].inter0,"/")==0) op=3;
             //第一个操作数
             strcpy(token,intercode[interi].inter1);
-            if(strcmp(token,"ret")==0)//返回值;
-            {
-                fprintf(ASSEM,"\tlw $s1,8($sp)\n");
-            }
-            else if(checkiflog()==0||checkiflog()==1||checkiflog()==4)//常量或变量或参数
+            if(checkiflog()==0||checkiflog()==1||checkiflog()==4)//常量或变量或参数
             {
                 if(symtab[tabi].location==0)//全局常变量
                     fprintf(ASSEM,"\tlw $s1,%d($0)\n",symtab[tabi].address);
@@ -427,11 +450,7 @@ void inter2assem()
 
             //第二个操作数
             strcpy(token,intercode[interi].inter2);
-            if(strcmp(token,"ret")==0)//返回值;
-            {
-                fprintf(ASSEM,"\tlw $s2,8($sp)\n");
-            }
-            else if(checkiflog()==0||checkiflog()==1||checkiflog()==4)//常量或变量或参数
+            if(checkiflog()==0||checkiflog()==1||checkiflog()==4)//常量或变量或参数
             {
                 if(symtab[tabi].location==0)//全局常变量
                     fprintf(ASSEM,"\tlw $s2,%d($0)\n",symtab[tabi].address);
@@ -463,8 +482,9 @@ void inter2assem()
                 else //局部变量
                     fprintf(ASSEM,"\tsw $s0,%d($fp)\n",symtab[tabi].address);
             }
-            else if(checkiftn()>0)//tn
+            else if(checkiftn()>0){//tn
                 fprintf(ASSEM,"\tsw $s0,%d($t0)\n",checkiftn()*4);
+            }
         }
         //函数调用
         else if(strcmp(intercode[interi].inter0,"call")==0)
@@ -547,6 +567,134 @@ void inter2assem()
         {
             fprintf(ASSEM,"\tj %s\n",intercode[interi].inter1);
         }
+        //条件判断
+        else if(strcmp(intercode[interi].inter0,"==")==0||strcmp(intercode[interi].inter0,"!=")==0||
+                strcmp(intercode[interi].inter0,"<")==0||strcmp(intercode[interi].inter0,"<=")==0||
+                strcmp(intercode[interi].inter0,">")==0||strcmp(intercode[interi].inter0,">=")==0)
+        {
+            if(strcmp(intercode[interi].inter0,"==")==0) con=0;
+            else if(strcmp(intercode[interi].inter0,"!=")==0) con=1;
+            else if(strcmp(intercode[interi].inter0,"<")==0) con=2;
+            else if(strcmp(intercode[interi].inter0,"<=")==0) con=3;
+            else if(strcmp(intercode[interi].inter0,">")==0) con=4;
+            else if(strcmp(intercode[interi].inter0,">=")==0) con=5;
+            //第一个操作数
+            strcpy(token,intercode[interi].inter1);
+            if(checkiflog()==0||checkiflog()==1||checkiflog()==4)//常量或变量或参数
+            {
+                if(symtab[tabi].location==0)//全局常变量
+                    fprintf(ASSEM,"\tlw $s1,%d($0)\n",symtab[tabi].address);
+                else//局部常变量
+                    fprintf(ASSEM,"\tlw $s1,%d($fp)\n",symtab[tabi].address);
+            }
+            else if(checkiftn()>0)//tn
+                fprintf(ASSEM,"\tlw $s1,%d($t0)\n",checkiftn()*4);
+            else//立即数
+                fprintf(ASSEM,"\tori $s1,$0,%s\n",token);
+
+            //第二个操作数
+            strcpy(token,intercode[interi].inter2);
+            if(checkiflog()==0||checkiflog()==1||checkiflog()==4)//常量或变量或参数
+            {
+                if(symtab[tabi].location==0)//全局常变量
+                    fprintf(ASSEM,"\tlw $s2,%d($0)\n",symtab[tabi].address);
+                else//局部常变量
+                    fprintf(ASSEM,"\tlw $s2,%d($fp)\n",symtab[tabi].address);
+            }
+            else if(checkiftn()>0)//tn
+                fprintf(ASSEM,"\tlw $s2,%d($t0)\n",checkiftn()*4);
+            else//立即数
+                fprintf(ASSEM,"\tori $s2,$0,%s\n",token);
+
+            //比较并跳转操作
+            //因为四元式中所有的条件下一句都是bz，故汇编所有操作都是反着的;
+            fprintf(ASSEM,"\tsub $s0,$s1,$s2\n");
+            if(con==0) // ==
+                fprintf(ASSEM,"\tbne $s1,$s2,");
+            else if(con==1)// !=
+                fprintf(ASSEM,"\tbeq $s1,$s2,");
+            else if(con==2)// <
+                fprintf(ASSEM,"\tbgez $s0,");
+            else if(con==3)// <=
+                fprintf(ASSEM,"\tbgtz $s0,");
+            else if(con==4)// >
+                fprintf(ASSEM,"\tblez $s0,");
+            else if(con==5)// >=
+                fprintf(ASSEM,"\tbltz $s0,");
+
+            //跳转到Label
+            fprintf(ASSEM,"%s\n",intercode[++interi].inter1);
+        }
+        //scanf
+        else if(strcmp(intercode[interi].inter0,"scan")==0)
+        {
+            //标识符
+            strcpy(token,intercode[interi].inter1);
+            if(checkiflog()==1||checkiflog()==4)//变量或参数
+            {
+                if(symtab[tabi].type==1)//读入int
+                {
+                     fprintf(ASSEM,"\tli $v0,5\n");
+                     fprintf(ASSEM,"\tsyscall\n");
+                }
+                else if(symtab[tabi].type==0)//读入char
+                {
+                    fprintf(ASSEM,"\tli $v0,12\n");
+                     fprintf(ASSEM,"\tsyscall\n");
+                }
+                if(symtab[tabi].location==0)//全局变量
+                    fprintf(ASSEM,"\tsw $v0,%d($0)\n",symtab[tabi].address);
+                else//局部变量
+                    fprintf(ASSEM,"\tsw $v0,%d($fp)\n",symtab[tabi].address);
+            }
+        }
+        //printf
+        else if(strcmp(intercode[interi].inter0,"print")==0)
+        {
+            if(intercode[interi].inter1[0]!='\0')//字符串
+            {
+                fprintf(ASSEM,"\tla $a0,str%s\n",intercode[interi].inter1);
+                fprintf(ASSEM,"\tli $v0,4\n");
+                fprintf(ASSEM,"\tsyscall\n");
+            }
+            else//表达式
+            {
+                strcpy(token,intercode[interi].inter2);
+                if(checkiflog()==0||checkiflog()==1||checkiflog()==4)//常量或变量或参数
+                {
+                    if(symtab[tabi].location==0)//全局常变量
+                        fprintf(ASSEM,"\tlw $a0,%d($0)\n",symtab[tabi].address);
+                    else//局部常变量
+                        fprintf(ASSEM,"\tlw $a0,%d($fp)\n",symtab[tabi].address);
+                    if(symtab[tabi].type==1)//打印int
+                    {
+                         fprintf(ASSEM,"\tli $v0,1\n");
+                         fprintf(ASSEM,"\tsyscall\n");
+                    }
+                    else if(symtab[tabi].type==0)//打印char
+                    {
+                         fprintf(ASSEM,"\tli $v0,11\n");
+                         fprintf(ASSEM,"\tsyscall\n");
+                    }
+                }
+                else if(checkiftn()>0)//tn
+                {
+                    fprintf(ASSEM,"\tlw $a0,%d($t0)\n",checkiftn()*4);
+                    fprintf(ASSEM,"\tli $v0,1\n");
+                    fprintf(ASSEM,"\tsyscall\n");
+                }
+                else//立即数
+                {
+                    fprintf(ASSEM,"\tori $a0,$0,%s\n",token);
+                    fprintf(ASSEM,"\tli $v0,1\n");
+                    fprintf(ASSEM,"\tsyscall\n");
+                }
+
+            }
+            fprintf(ASSEM,"\tla $a0,enter\n",intercode[interi].inter1);
+            fprintf(ASSEM,"\tli $v0,4\n");
+            fprintf(ASSEM,"\tsyscall\n");
+        }
         fprintf(ASSEM,"\n");
     }
     fprintf(ASSEM,"Label_end:\n");
@@ -577,86 +725,21 @@ int checkiflog()//检查是否登录符号表并返回类型
 int checkiftn()//检查是否为四元式的中间变量并返回序号
 {
     int i;
-    int num=0;
+    int num;
+    num=0;
+    //printf("%s",token);
     if(token[0]=='t')
     {
-        for(i=1;i<=3;i++)
+        i=1;
+        while(token[i]!='\0')
         {
             if(token[i]>='0'&&token[i]<='9')//是数字
                 num=num*10+(token[i]-'0');
+            i++;
         }
     }
     return num;
 }
-
-
-//        //scanf
-//        /*li   $v0, 12 # input a
-//          syscall
-//          move $s1, $v0*/
-//        else if(strcmp(intercode[interi].inter0,"scan")==0)
-//        {
-//            strcpy(token,intercode[interi].inter1);
-//            if(checkiflog()>=0)//读值，存入标识符
-//            {
-//                fprintf(ASSEM,"li $v0,12\n");
-//                fprintf(ASSEM,"syscall\n");
-//                //temp1保存被取到哪个寄存器
-//                strcpy(temp1,"$s");
-//                itoa(tabi,tabtemp,10);
-//                strcat(temp1,tabtemp);
-//                fprintf(ASSEM,"move %s,$v0\n",temp1);
-//            }
-//        }
-//        //printf
-//        /*lw $a0, 4($s2)# output
-//          li  $v0, 11
-//          syscall
-//          la   $a0, messege # output
-//          li   $v0, 4
-//          syscall*/
-//        else if(strcmp(intercode[interi].inter0,"print")==0)
-//        {
-//            //打印字符串
-//            strcpy(token,intercode[interi].inter1);
-//            //printf("%d ",token[0]);
-//            //printf("%d\n",'\0');
-//            if(token[0]!='\0')
-//            {
-//                fprintf(ASSEM,"la $a0,%s\n",token);
-//                fprintf(ASSEM,"li $v0,4\n");
-//                fprintf(ASSEM,"syscall\n");
-//            }
-//            //打印表达式
-//            strcpy(token,intercode[interi].inter2);
-//            if(checkiflog()>=0)//打印标识符
-//            {
-//                fprintf(ASSEM,"lw $a0,%d($a0)\n",symtab[tabi].address);
-//                fprintf(ASSEM,"li $v0,11\n");
-//                fprintf(ASSEM,"syscall\n");
-//            }
-//            else
-//            {
-//                tn=checkiftn();
-//                if(tn>0)//打印中间变量
-//                {
-//                    fprintf(ASSEM,"lw $a0,%d($a1)\n",4*tn);
-//                    fprintf(ASSEM,"li $v0,11\n");
-//                    fprintf(ASSEM,"syscall\n");
-//                }
-//                else//被赋的值是立即数
-//                {
-//                    strcpy(temp2,token);
-//                    fprintf(ASSEM,"li $a0,%s\n",temp2);
-//                    fprintf(ASSEM,"li $v0,11\n");
-//                    fprintf(ASSEM,"syscall\n");
-//                }
-//            }
-//        }
-//    }
-//}
-
-
 
 int checkiflab()//检查是否为四元式的label并返回序号
 {
@@ -1504,6 +1587,7 @@ int switchstatement() //情况语句
 int casestatement(char *switchlabel) //情况子语句
 {
     //sym此时为case
+    int charflag; //1-int 0-char
     char caselabel[MAXIDENTLEN];
     char endlabel[MAXIDENTLEN];
     itoa(endofcase++,endlabel,10);
@@ -1514,10 +1598,13 @@ int casestatement(char *switchlabel) //情况子语句
         sym=nextsym();
         if(sym==sinquo||sym==inttype||sym==numtype)//单引号括起来的字母或数字，或者整数
         {
-            if(constforcase()==1){//常量
+            charflag=constforcase();
+            if(charflag>0){//常量
                 printf("Case statement\n");
                 fprintf(OUT,"Case statement\n");
             }
+            if(charflag==2)
+                itoa((int)ident[0],ident,10);
             strcpy(intercode[interpc].inter2,ident);
             //跳转
             strcpy(intercode[++interpc].inter0,"bz");
@@ -1791,7 +1878,7 @@ int constforcase()
         {
             sym=nextsym();
             if(sym==sinquo)//单引号
-                return 1;
+                return 2;
             else{
                 printf("constanterror\n");
                 return 0;
@@ -2027,6 +2114,8 @@ int factor() //因子
         case sinquo://字符
             sym=nextsym();
             if((sym>=add&&sym<=divi)||sym==chartype||sym==numtype){
+                itoa((int)token[0],ident,10);
+                strcpy(factret,ident);
                 sym=nextsym();
                 if(sym==sinquo){//单引号
                     sym=nextsym();
