@@ -151,6 +151,7 @@ While statement begin:
 	Factor
 	Expression end
 Write statement
+	String
 	Expression begin
 	Item
 	Factor
@@ -167,6 +168,8 @@ Assign statement
 	Factor
 	Expression end
 statement end
+Write statement
+	String
 If statement begin:
 	condition
 	Expression begin
@@ -328,6 +331,7 @@ Write statement
 Default statement
 Write statement
 	String
+Read statement
 Assign statement
 	Expression begin
 	Item
@@ -363,6 +367,17 @@ Write statement
 	Expression begin
 	Item
 	Factor
+	Expression end
+Write statement
+	Expression begin
+	Item
+	Factor
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Expression end
 	Expression end
 Write statement
 	Expression begin

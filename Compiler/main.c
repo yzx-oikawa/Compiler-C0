@@ -3,11 +3,12 @@
 #include <string.h>
 #include <ctype.h>
 
-#define MAXIDENTLEN 20   //标识符最大长度
-#define MAXSYMTABLEN 100 //符号表最大长度
-#define MAXINTERCODE 10  //四元式每一项最大长度
-#define MAXINTERLEN 500  //四元式序列最大长度
-#define MAXASSEMLEN 10  //汇编代码每一项最大长度
+#define MAXIDENTLEN 50   //标识符最大长度
+#define MAXSYMTABLEN 150 //符号表最大长度
+#define MAXINTERCODE 50  //四元式每一项最大长度
+#define MAXINTERLEN 1000  //四元式序列最大长度
+#define MAXASSEMLEN 50  //汇编代码每一项最大长度
+#define MAXMIPSTRLEN 50  //汇编字符串序列最大长度和每一项最大长度
 
 const char *keyword[]={"const","int","char","void","main","if","else","while","switch","case",
                        "default","scanf","printf","return"};
@@ -54,9 +55,12 @@ struct intercodes intercode[MAXINTERLEN];
 int interpc=0;//四元式序列指针
 int interi;   //用来遍历四元式序列的参数
 
+
 /*用于表达式转四元式的返回字符串*/
 int exprt=1; //四元式中的临时变量tn计数
 int labelt=1; //四元式中的标签计数
+int tntype[MAXIDENTLEN];//四元式中的临时变量tn类型
+char tntoken[MAXIDENTLEN]; //用来判断tn类型的字符串
 int endofcase=1; //单独给switch语句结束的标签计数
 char exprtemp[MAXIDENTLEN]; //exprt的字符串形式
 char labtemp[MAXIDENTLEN]; //labelt的字符串形式
@@ -68,9 +72,21 @@ char strret[MAXIDENTLEN];  //写语句打印的字符串
 int assems=0;
 char assemtemp[MAXASSEMLEN]; //assems的字符串形式
 
+/*用来存汇编字符串的结构*/
+struct mipsstring{
+    char name[MAXMIPSTRLEN];
+    char str [MAXMIPSTRLEN];
+};
+struct mipsstring mipstring[MAXMIPSTRLEN];
+int mipstrpc=0;//汇编字符串序列指针
+int mipstri;   //用来遍历汇编字符串序列的参数
+int stri=0;    //str序号
+char strtemp[MAXMIPSTRLEN];  //stri的字符串形式
+
+char parastack[MAXIDENTLEN][MAXIDENTLEN];
+int parapc;
 
 FILE *IN, *OUT, *INTER, *ASSEM;
-int No=1;
 
 int blankflag=0; //0-跳过空格 1-不跳过空格
 int vardecbegflag=0;//1-变量声明开始
@@ -123,6 +139,8 @@ int strings();//字符串
 int checkiflog();//检查是否登录符号表
 int checkiftn();//检查是否为四元式的中间变量并返回序号
 int checkiflab();//检查是否为四元式的label并返回序号
+int tncheckiftn(); //这是什么我也不知道
+int tncheckiflog();//回头争取重新写一下
 void inter2assem();//四元式转汇编
 
 void inter2assem()
@@ -135,15 +153,38 @@ void inter2assem()
     int arrayaddr;
     char funcname[MAXIDENTLEN];
     fprintf(ASSEM,".kdata\n");
-    fprintf(ASSEM,"enter: .ASCIIZ \"\\n\"\n");
+    fprintf(ASSEM,"\tenter: .ASCIIZ \"\\n\"\n");
     for(interi=1;interi<=interpc;interi++)
     {
-        if(strcmp(intercode[interi].inter0,"print")==0
-                &&intercode[interi].inter1[0]!='\0')
-        {
-            fprintf(ASSEM,"str%s: .ASCIIZ \"%s\"\n",intercode[interi].inter1,intercode[interi].inter1);
-
+        if(strcmp(intercode[interi].inter0,"print")==0){
+            if(intercode[interi].inter1[0]!='\0')
+            {
+                if(mipstrpc==0)
+                {
+                    itoa(stri++,strtemp,10);
+                    strcpy(mipstring[mipstrpc].name,"str");
+                    strcat(mipstring[mipstrpc].name,strtemp);
+                    strcpy(mipstring[mipstrpc++].str,intercode[interi].inter1);
+                }
+                for(mipstri=0;mipstri<mipstrpc;mipstri++)
+                {
+                    if(strcmp(intercode[interi].inter1,mipstring[mipstri].str)==0)
+                        break;
+                    if(mipstri==mipstrpc-1)//未保存的字符串
+                    {
+                        itoa(stri++,strtemp,10);
+                        strcpy(mipstring[mipstrpc].name,"str");
+                        strcat(mipstring[mipstrpc].name,strtemp);
+                        strcpy(mipstring[mipstrpc++].str,intercode[interi].inter1);
+                        break;
+                    }
+                }
+            }
         }
+    }
+    for(mipstri=0;mipstri<mipstrpc;mipstri++)
+    {
+        fprintf(ASSEM,"\t%s: .ASCIIZ \"%s\"\n",mipstring[mipstri].name,mipstring[mipstri].str);
     }
     fprintf(ASSEM,".text\n");
     fprintf(ASSEM,"\tli $fp, 0x00000000\n");
@@ -243,27 +284,6 @@ void inter2assem()
             //移动sp
             fprintf(ASSEM,"\taddi $sp,$sp,4\n");
         }
-        //取相反数
-        else if(strcmp(intercode[interi].inter0,"oppo")==0)
-        {
-            strcpy(token,intercode[interi].inter3);
-            if(strcmp(token,"ret")==0)//返回值
-            {
-                fprintf(ASSEM,"\tlw $s0,8($sp)\n");
-            }
-            else if(checkiflog()==0||checkiflog()==1||checkiflog()==4)//常量或变量或参数
-            {
-                if(symtab[tabi].location==0)//全局常变量
-                    fprintf(ASSEM,"\tlw $s0,%d($0)\n",symtab[tabi].address);
-                else//局部常变量
-                    fprintf(ASSEM,"\tlw $s0,%d($fp)\n",symtab[tabi].address);
-            }
-            else if(checkiftn()>0)//tn
-                fprintf(ASSEM,"\tlw $s0,%d($t0)\n",checkiftn()*4);
-            else//立即数
-                fprintf(ASSEM,"\tori $s0,$0,%s\n",token);
-            fprintf(ASSEM,"\tsub $s0,$0,$s0\n");
-        }
         //赋值语句
         else if(strcmp(intercode[interi].inter0,"assign")==0)
         {
@@ -284,6 +304,12 @@ void inter2assem()
                 fprintf(ASSEM,"\tlw $s0,%d($t0)\n",checkiftn()*4);
             else//立即数
                 fprintf(ASSEM,"\tori $s0,$0,%s\n",token);
+
+            //取相反数
+            if(intercode[interi].inter2[0]=='-')
+            {
+                fprintf(ASSEM,"\tsub $s0,$0,$s0\n");
+            }
 
             //赋给的值
             strcpy(token,intercode[interi].inter3);
@@ -487,6 +513,10 @@ void inter2assem()
             }
         }
         //函数调用
+        else if(strcmp(intercode[interi].inter0,"push")==0)
+        {
+            strcpy(parastack[parapc++],intercode[interi].inter1);
+        }
         else if(strcmp(intercode[interi].inter0,"call")==0)
         {
             strcpy(token,intercode[interi].inter1);
@@ -509,10 +539,10 @@ void inter2assem()
                     fprintf(ASSEM,"\tsw $fp,16($sp)\n");
                     //把sp存到sp+3
                     fprintf(ASSEM,"\tsw $sp,12($sp)\n");
-                    for(parai=1;parai<=numofpara;parai++)
+                    for(parai=numofpara;parai>=1;parai--)
                     {
                         //对每一个形参
-                        strcpy(token,intercode[++interi].inter1);
+                        strcpy(token,parastack[parapc-parai]);
                         if(checkiflog()==0||checkiflog()==1||checkiflog()==4)//常量或变量或参数
                         {
                             if(symtab[tabi].location==0)//全局常变量
@@ -524,8 +554,9 @@ void inter2assem()
                             fprintf(ASSEM,"\tlw $s0,%d($t0)\n",checkiftn()*4);
                         else//立即数
                             fprintf(ASSEM,"\tori $s0,$0,%s\n",token);
-                        fprintf(ASSEM,"\tsw $s0,%d($sp)\n",16+parai*4);
+                        fprintf(ASSEM,"\tsw $s0,%d($sp)\n",16+(numofpara-parai+1)*4);
                     }
+                    parapc=parapc-numofpara;
                     //把返回值存到sp+2，把PC返回地址存到sp+1
                     fprintf(ASSEM,"\tjal Label_%s\n",funcname);
                 }
@@ -653,9 +684,18 @@ void inter2assem()
         {
             if(intercode[interi].inter1[0]!='\0')//字符串
             {
-                fprintf(ASSEM,"\tla $a0,str%s\n",intercode[interi].inter1);
-                fprintf(ASSEM,"\tli $v0,4\n");
-                fprintf(ASSEM,"\tsyscall\n");
+
+                for(mipstri=0;mipstri<mipstrpc;mipstri++)
+                {
+                    if(strcmp(intercode[interi].inter1,mipstring[mipstri].str)==0)
+                    {
+                        fprintf(ASSEM,"\tla $a0,%s\n",mipstring[mipstri].name);
+                        fprintf(ASSEM,"\tli $v0,4\n");
+                        fprintf(ASSEM,"\tsyscall\n");
+                        break;
+                    }
+
+                }
             }
             else//表达式
             {
@@ -679,9 +719,19 @@ void inter2assem()
                 }
                 else if(checkiftn()>0)//tn
                 {
-                    fprintf(ASSEM,"\tlw $a0,%d($t0)\n",checkiftn()*4);
-                    fprintf(ASSEM,"\tli $v0,1\n");
-                    fprintf(ASSEM,"\tsyscall\n");
+                    if(tntype[checkiftn()]==1)
+                    {
+                        fprintf(ASSEM,"\tlw $a0,%d($t0)\n",checkiftn()*4);
+                        fprintf(ASSEM,"\tli $v0,1\n");
+                        fprintf(ASSEM,"\tsyscall\n");
+                    }
+                    else if(tntype[checkiftn()]==0)
+                    {
+                        fprintf(ASSEM,"\tlw $a0,%d($t0)\n",checkiftn()*4);
+                        fprintf(ASSEM,"\tli $v0,11\n");
+                        fprintf(ASSEM,"\tsyscall\n");
+                    }
+
                 }
                 else//立即数
                 {
@@ -740,7 +790,46 @@ int checkiftn()//检查是否为四元式的中间变量并返回序号
     }
     return num;
 }
+int tncheckiflog()
+{
+    //全局常量、全局变量、main常量、main变量、函数常量变量声明、函数参数、函数声明
+    for(tabi=tabpc;tabi>=0;tabi--){
+        if(symtab[tabi].location==0||symtab[tabi].location==symloca||symtab[tabi].kind==2){
+            if (strcmp(tntoken,symtab[tabi].name)==0){//在表中找到了这个标识符
+                if(symtab[tabi].kind==0)//是常量
+                    return 0;
+                else if(symtab[tabi].kind==1)//是变量
+                    return 1;
+                else if(symtab[tabi].kind==2&&symtab[tabi].value==0)//无返函数
+                    return 2;
+                else if(symtab[tabi].kind==2&&symtab[tabi].value==1)//有返函数
+                    return 3;
+                else if(symtab[tabi].kind==3)//是参数
+                    return 4;
+            }
+        }
+    }
+    return -1;//未登录
+}
 
+int tncheckiftn()
+{
+    int i;
+    int num;
+    num=0;
+    //printf("%s",token);
+    if(tntoken[0]=='t')
+    {
+        i=1;
+        while(tntoken[i]!='\0')
+        {
+            if(tntoken[i]>='0'&&tntoken[i]<='9')//是数字
+                num=num*10+(tntoken[i]-'0');
+            i++;
+        }
+    }
+    return num;
+}
 int checkiflab()//检查是否为四元式的label并返回序号
 {
     int i;
@@ -805,12 +894,14 @@ int constdef()
                     strcpy(intercode[interpc].inter2,token);
                 }
                 else{
+                    fprintf(OUT,"%s DUPLICATE DEFINE\n",token);
                     printf("%s DUPLICATE DEFINE\n",token);
                 }
                 sym=nextsym();
                 if(sym==equmark)//等号
                 {
                     sym=nextsym();
+                    subflag=0;
                     if(sym==add||sym==sub){
                         if(sym==sub) subflag=1;
                         sym=nextsym();
@@ -855,6 +946,7 @@ int constdef()
                 }
                 else{
                     printf("%d\n",logflag);
+                    fprintf(OUT,"%s DUPLICATE DEFINE\n",token);
                     printf("%s DUPLICATE DEFINE\n",token);
                 }
                 sym=nextsym();
@@ -949,6 +1041,7 @@ int vardef()
                 strcpy(intercode[interpc].inter2,token);
             }
             else{
+                fprintf(OUT,"%s DUPLICATE DEFINE\n",token);
                 printf("%s DUPLICATE DEFINE\n",token);
             }
             sym=nextsym();
@@ -1019,6 +1112,7 @@ int differ()
 
             }
             else{
+                fprintf(OUT,"%s DUPLICATE DEFINE\n",token);
                 printf("%s DUPLICATE DEFINE\n",token);
                 }
             sym=nextsym();
@@ -1134,6 +1228,7 @@ int voidfuncdef()
                 strcpy(intercode[interpc].inter2,token);
             }
             else{
+                fprintf(OUT,"%s DUPLICATE DEFINE\n",token);
                 printf("%s DUPLICATE DEFINE\n",token);
             }
             sym=nextsym();
@@ -1154,6 +1249,8 @@ int voidfuncdef()
                         {
                             printf("Voidfuncdef end\n");
                             fprintf(OUT,"Voidfuncdef end\n");
+                            strcpy(intercode[++interpc].inter0,"ret");
+                            strcpy(intercode[interpc].inter1,"none");
                             return;
                         }
                     }
@@ -1161,6 +1258,7 @@ int voidfuncdef()
             }
             else if(sym==lbrace)//左花括号
             {
+                symtab[tabpc].length=0;
                 sym=nextsym();
                 statements();//复合语句
                 if(sym==rbrace)//右花括号
@@ -1203,6 +1301,7 @@ int parameters()//参数表
                     strcpy(intercode[interpc].inter2,token);
                 }
                 else{
+                    fprintf(OUT,"%s DUPLICATE DEFINE\n",token);
                     printf("%s DUPLICATE DEFINE\n",token);
                 }
                 sym=nextsym();
@@ -1326,6 +1425,7 @@ int statement()
             case lbrace:
                 braceflag++;
                 sym=nextsym();
+                if(sym==semicolon) continue;
                 statement();
                 if(sym==rbrace){
                     braceflag--;
@@ -1355,7 +1455,7 @@ int statement()
                     else if(logflag==3)
                         retfuncuse();//返回了右括号
                     sym=nextsym();
-                    if(sym==semicolon)//括号
+                    if(sym==semicolon)//分号
                         continue;
                 }
                 else if(sym==equmark||sym==lbracket)//等号或左方括号，为赋值语句
@@ -1497,6 +1597,17 @@ int condition()
         strcpy(intercode[interpc].inter1,"Label");
         strcat(intercode[interpc].inter1,labtemp);
     }
+    else
+    {
+        strcpy(intercode[++interpc].inter0,">");
+        strcpy(intercode[interpc].inter1,conident);
+        strcpy(intercode[interpc].inter2,"0");
+        //跳转
+        strcpy(intercode[++interpc].inter0,"bz");
+        itoa(labelt++,labtemp,10);
+        strcpy(intercode[interpc].inter1,"Label");
+        strcat(intercode[interpc].inter1,labtemp);
+    }
     return labelt-1;
 }
 
@@ -1518,7 +1629,9 @@ int whilestatement() //循环语句
         itoa(condition(),endlabel,10);//条件
         if(sym==rparent)//右括号
         {
-            sym=nextsym();
+
+            sym=nextsym();//分号或左花括号
+            //printf("%s\n",token);
             if(sym==semicolon){//语句为空
                 //sym=nextsym();
                 strcpy(intercode[++interpc].inter0,"goto");
@@ -1531,7 +1644,9 @@ int whilestatement() //循环语句
                 return;//返回分号后的符号
             }
             else{
-                statement();//语句
+//                if(sym==lbrace)
+//                    sym=nextsym();
+                statement();//语句,返回右花括号
                 strcpy(intercode[++interpc].inter0,"goto");
                 strcpy(intercode[interpc].inter1,"Label");
                 strcat(intercode[interpc].inter1,beginlabel);
@@ -1539,6 +1654,8 @@ int whilestatement() //循环语句
                 strcpy(intercode[++interpc].inter0,"Label");
                 strcat(intercode[interpc].inter0,endlabel);
                 strcpy(intercode[interpc].inter1,":");
+                //printf("%s\n",token);
+                //sym=rbrace;
                 if(sym==rbrace)
                     return;
             }
@@ -1587,7 +1704,7 @@ int switchstatement() //情况语句
 int casestatement(char *switchlabel) //情况子语句
 {
     //sym此时为case
-    int charflag; //1-int 0-char
+    int constflag;
     char caselabel[MAXIDENTLEN];
     char endlabel[MAXIDENTLEN];
     itoa(endofcase++,endlabel,10);
@@ -1596,16 +1713,22 @@ int casestatement(char *switchlabel) //情况子语句
         strcpy(intercode[++interpc].inter0,"==");
         strcpy(intercode[interpc].inter1,switchlabel);
         sym=nextsym();
-        if(sym==sinquo||sym==inttype||sym==numtype)//单引号括起来的字母或数字，或者整数
+        if(sym==sinquo||sym==inttype||sym==numtype||sym==add||sym==sub)//单引号括起来的字母或数字，或者整数
         {
-            charflag=constforcase();
-            if(charflag>0){//常量
+            constflag=constforcase();
+            if(constflag>0){//常量
                 printf("Case statement\n");
                 fprintf(OUT,"Case statement\n");
             }
-            if(charflag==2)
+            if(constflag==2){//char
                 itoa((int)ident[0],ident,10);
-            strcpy(intercode[interpc].inter2,ident);
+            }
+            if(constflag==3){//取相反数
+                strcpy(intercode[interpc].inter2,"-");
+                strcat(intercode[interpc].inter2,ident);
+            }
+            else
+                strcpy(intercode[interpc].inter2,ident);
             //跳转
             strcpy(intercode[++interpc].inter0,"bz");
             itoa(labelt++,caselabel,10);
@@ -1626,12 +1749,12 @@ int casestatement(char *switchlabel) //情况子语句
                 strcpy(intercode[interpc].inter1,"Labeleoc");
                 strcat(intercode[interpc].inter1,endlabel);
 
-                //下一个case开始
                 strcpy(intercode[++interpc].inter0,"Label");
                 strcat(intercode[interpc].inter0,caselabel);
                 strcpy(intercode[interpc].inter1,":");
-                if(sym==casesym)//下一个case
+                if(sym==casesym){//下一个case
                     continue;
+                }
                 else if(sym==defaultsym){//default
                     defaultstatement();
                     strcpy(intercode[++interpc].inter0,"Labeleoc");
@@ -1673,20 +1796,26 @@ int defaultstatement() //缺省
 /*＜有返回值函数调用语句＞ ::= ＜标识符＞‘(’＜值参数表＞‘)’|<标识符>*/
 int retfuncuse() //有返回值函数调用语句
 {
+    char funcname[MAXIDENTLEN];
     printf("Return funcuse\n");
     fprintf(OUT,"Return funcuse\n");
     //sym此时为左括号或分号
-    strcpy(intercode[++interpc].inter0,"call");
-    //printf("%s\n",ident);
-    strcpy(intercode[interpc].inter1,ident);
-    if(sym==semicolon)
+    strcpy(funcname,ident);
+    if(sym==semicolon){
+        strcpy(intercode[++interpc].inter0,"call");
+        strcpy(intercode[interpc].inter1,funcname);
         return;
+    }
     else if(sym==lparent)
     {
         sym=nextsym();
         valuepara();//值参数表
         if(sym==rparent)//右括号
+        {
+            strcpy(intercode[++interpc].inter0,"call");
+            strcpy(intercode[interpc].inter1,funcname);
             return;
+        }
     }
     printf("retfuncuseerror\n");
 }
@@ -1694,18 +1823,25 @@ int retfuncuse() //有返回值函数调用语句
 /*＜无返回值函数调用语句＞ ::= ＜标识符＞‘(’＜值参数表＞‘)’|<标识符>*/
 int voidfuncuse() //无返回值函数调用语句
 {
+    char funcname[MAXIDENTLEN];
     printf("Void funcuse\n");
     fprintf(OUT,"Void funcuse\n");
-    strcpy(intercode[++interpc].inter0,"call");
-    strcpy(intercode[interpc].inter1,ident);
-    if(sym==semicolon)
+    strcpy(funcname,ident);
+    if(sym==semicolon){
+        strcpy(intercode[++interpc].inter0,"call");
+        strcpy(intercode[interpc].inter1,funcname);
         return;
+    }
     else if(sym==lparent)
     {
         sym=nextsym();
         valuepara();//值参数表
         if(sym==rparent)//右括号
+        {
+            strcpy(intercode[++interpc].inter0,"call");
+            strcpy(intercode[interpc].inter1,funcname);
             return;
+        }
     }
     printf("voidfuncuseerror\n");
 }
@@ -1722,7 +1858,6 @@ int valuepara() //值参数表
         strcpy(intercode[interpc].inter1,exprret);
         if(sym==comma)
         {
-
              sym=nextsym();
              continue;
         }
@@ -1871,11 +2006,12 @@ int constant()
 /*情况语句中，switch后面的表达式和case后面的常量只允许出现int和char类型*/
 int constforcase()
 {
-    //sym此时为单引号或者整数
+    //sym此时为单引号或者整数或正负号
     if(sym==sinquo){//单引号
         sym=nextsym();
-        if(sym==chartype||sym==numtype)
+        if(sym==chartype||sym==numtype||(sym>=add)&&(sym<=divi))
         {
+            strcpy(ident,token);
             sym=nextsym();
             if(sym==sinquo)//单引号
                 return 2;
@@ -1891,11 +2027,17 @@ int constforcase()
     }
     else if(sym==inttype||sym==numtype)
         return 1;
-    else if(sym==add||sym==sub)//加号或减号
+    else if(sym==add)//加号
     {
         sym=nextsym();
         if(sym==inttype||sym==numtype)
             return 1;
+    }
+    else if(sym==sub)//减号
+    {
+        sym=nextsym();
+        if(sym==inttype||sym==numtype)
+            return 3;
     }
     return 0;
 }
@@ -1904,6 +2046,7 @@ int constforcase()
 int strings()
 {
     memset(strret, 0, sizeof(strret));
+    blankflag=1;
     printf("\tString\n");
     fprintf(OUT,"\tString\n");
     //sym此时为双引号
@@ -1912,11 +2055,16 @@ int strings()
     {
         if(sym>=constsym&&sym<=underline){
             strcat(strret,token);
+            //printf("%s\n",strret);
             sym=nextsym();
+            //printf("%s\n",token);
         }
-        else
+        else{
+            printf("12345\n");
             return;
+        }
     }
+    blankflag=0;
     return;//返回了双引号
 }
 
@@ -1925,19 +2073,35 @@ int expression()//表达式
 {
     char expr[3][MAXIDENTLEN];
     int exprpc=1;
+    int subitemflag=0;//第一个项取负
     printf("\tExpression begin\n");
     fprintf(OUT,"\tExpression begin\n");
     if(sym==add||sym==sub){
-        if(sym==sub){
-            sym=nextsym();
-            strcpy(intercode[++interpc].inter0,"oppo");
-            strcpy(intercode[interpc].inter3,ident);
-        }
-        else sym=nextsym();
+        if(sym==sub)
+            subitemflag=1;
+        sym=nextsym();
     }
     while(1)
     {
         item();
+        if(subitemflag==1)
+        {
+                strcpy(intercode[++interpc].inter0,"assign");
+                strcpy(intercode[interpc].inter1,itemret);
+                strcpy(intercode[interpc].inter2,"-");
+                strcpy(tntoken,itemret);
+                if(tncheckiflog()>0)//是标识符
+                    tntype[exprt]=symtab[tabi].type;
+                else if(tncheckiftn()>0)//是tn
+                    tntype[exprt]=tntype[tncheckiftn()];
+                else //是立即数
+                    tntype[exprt]=1;
+                itoa(exprt++,exprtemp,10);
+                strcpy(intercode[interpc].inter3,"t");
+                strcat(intercode[interpc].inter3,exprtemp);
+                strcpy(itemret,intercode[interpc].inter3);
+                subitemflag=0;
+        }
         strcpy(expr[exprpc],itemret);
         if(sym==add||sym==sub){
             if(exprpc==1) exprpc=2;
@@ -1947,6 +2111,21 @@ int expression()//表达式
                 strcpy(intercode[++interpc].inter0,expr[0]);
                 strcpy(intercode[interpc].inter1,expr[1]);
                 strcpy(intercode[interpc].inter2,expr[2]);
+                strcpy(tntoken,expr[1]);
+                if(tncheckiflog()>0)//是标识符
+                    tntype[exprt]=symtab[tabi].type;
+                else if(tncheckiftn()>0)//是tn
+                    tntype[exprt]=tntype[tncheckiftn()];
+                else //是立即数
+                {
+                    strcpy(tntoken,expr[2]);
+                    if(tncheckiflog()>0)//是标识符
+                        tntype[exprt]=symtab[tabi].type;
+                    else if(tncheckiftn()>0)//是tn
+                        tntype[exprt]=tntype[tncheckiftn()];
+                    else //是立即数
+                        tntype[exprt]=1;
+                }
                 itoa(exprt++,exprtemp,10);
                 strcpy(intercode[interpc].inter3,"t");
                 strcat(intercode[interpc].inter3,exprtemp);
@@ -1964,6 +2143,21 @@ int expression()//表达式
                 strcpy(intercode[++interpc].inter0,expr[0]);
                 strcpy(intercode[interpc].inter1,expr[1]);
                 strcpy(intercode[interpc].inter2,expr[2]);
+                strcpy(tntoken,expr[1]);
+                if(tncheckiflog()>0)//是标识符
+                    tntype[exprt]=symtab[tabi].type;
+                else if(tncheckiftn()>0)//是tn
+                    tntype[exprt]=tntype[tncheckiftn()];
+                else //是立即数
+                {
+                    strcpy(tntoken,expr[2]);
+                    if(tncheckiflog()>0)//是标识符
+                        tntype[exprt]=symtab[tabi].type;
+                    else if(tncheckiftn()>0)//是tn
+                        tntype[exprt]=tntype[tncheckiftn()];
+                    else //是立即数
+                        tntype[exprt]=1;
+                }
                 itoa(exprt++,exprtemp,10);
                 strcpy(intercode[interpc].inter3,"t");
                 strcat(intercode[interpc].inter3,exprtemp);
@@ -1991,6 +2185,13 @@ int item() //项
         {
             strcpy(intercode[++interpc].inter0,"assign");
             strcpy(intercode[interpc].inter1,factret);
+            strcpy(tntoken,factret);
+            if(tncheckiflog()>0)//是标识符
+                tntype[exprt]=symtab[tabi].type;
+            else if(tncheckiftn()>0)//是tn
+                tntype[exprt]=tntype[tncheckiftn()];
+            else //是立即数
+                tntype[exprt]=1;
             itoa(exprt++,exprtemp,10);
             strcpy(intercode[interpc].inter3,"t");
             strcat(intercode[interpc].inter3,exprtemp);
@@ -2006,6 +2207,21 @@ int item() //项
                 strcpy(intercode[++interpc].inter0,ite[0]);
                 strcpy(intercode[interpc].inter1,ite[1]);
                 strcpy(intercode[interpc].inter2,ite[2]);
+                strcpy(tntoken,ite[1]);
+                if(tncheckiflog()>0)//是标识符
+                    tntype[exprt]=symtab[tabi].type;
+                else if(tncheckiftn()>0)//是tn
+                    tntype[exprt]=tntype[tncheckiftn()];
+                else //是立即数
+                {
+                    strcpy(tntoken,ite[2]);
+                    if(tncheckiflog()>0)//是标识符
+                        tntype[exprt]=symtab[tabi].type;
+                    else if(tncheckiftn()>0)//是tn
+                        tntype[exprt]=tntype[tncheckiftn()];
+                    else //是立即数
+                        tntype[exprt]=1;
+                }
                 itoa(exprt++,exprtemp,10);
                 strcpy(intercode[interpc].inter3,"t");
                 strcat(intercode[interpc].inter3,exprtemp);
@@ -2024,6 +2240,21 @@ int item() //项
                 strcpy(intercode[++interpc].inter0,ite[0]);
                 strcpy(intercode[interpc].inter1,ite[1]);
                 strcpy(intercode[interpc].inter2,ite[2]);
+                strcpy(tntoken,ite[1]);
+                if(tncheckiflog()>0)//是标识符
+                    tntype[exprt]=symtab[tabi].type;
+                else if(tncheckiftn()>0)//是tn
+                    tntype[exprt]=tntype[tncheckiftn()];
+                else //是立即数
+                {
+                    strcpy(tntoken,ite[2]);
+                    if(tncheckiflog()>0)//是标识符
+                        tntype[exprt]=symtab[tabi].type;
+                    else if(tncheckiftn()>0)//是tn
+                        tntype[exprt]=tntype[tncheckiftn()];
+                    else //是立即数
+                        tntype[exprt]=1;
+                }
                 itoa(exprt++,exprtemp,10);
                 strcpy(intercode[interpc].inter3,"t");
                 strcat(intercode[interpc].inter3,exprtemp);
@@ -2061,6 +2292,13 @@ int factor() //因子
                     strcpy(intercode[++interpc].inter0,"arrget");
                     strcpy(intercode[interpc].inter1,factident);
                     strcpy(intercode[interpc].inter2,factarray);
+                    strcpy(tntoken,factident);
+                    if(tncheckiflog()>0)//是标识符
+                        tntype[exprt]=symtab[tabi].type;
+                    else if(tncheckiftn()>0)//是tn
+                        tntype[exprt]=tntype[tncheckiftn()];
+                    else //是立即数
+                        tntype[exprt]=1;
                     itoa(exprt++,exprtemp,10);
                     strcpy(intercode[interpc].inter3,"t");
                     strcat(intercode[interpc].inter3,exprtemp);
@@ -2097,7 +2335,7 @@ int factor() //因子
                 return;
             }
             break;
-        case sub:
+
         case add://整数前正负号
             sym=nextsym();
             if(sym==inttype||sym==numtype){
@@ -2106,8 +2344,17 @@ int factor() //因子
                 return;
             }
             break;
+        case sub:
+            sym=nextsym();
+            if(sym==inttype||sym==numtype){
+                sym=nextsym();
+                strcpy(factret,"-");
+                strcat(factret,ident);
+                return;
+            }
+            break;
         case inttype:
-        case numtype://整数
+        case numtype://无符号整数
             sym=nextsym();
             strcpy(factret,ident);
             return;
@@ -2163,11 +2410,11 @@ int nextsym()
             return inttype;
         }
     }
-    else if (isalpha(ch)) //如果是字母
+    else if (isalpha(ch)||ch=='_') //如果是字母
     {
         token[t]=tolower(ch); //统一存成小写
         ch=fgetc(IN);
-        while(isdigit(ch)|isalpha(ch))
+        while(isdigit(ch)||isalpha(ch)||ch=='_')
         {
             token[++t]=tolower(ch);
             ch=fgetc(IN);
@@ -2293,6 +2540,8 @@ int nextsym()
                 return underline;
             case '#':
             case '$':
+            case '%':
+            case '&':
             case '.':
             case '?':
             case '@':
@@ -2360,6 +2609,12 @@ int main()
                 intercode[interi].inter2,intercode[interi].inter3);
         }
         inter2assem();
+
+        int b;
+        if('a'==97) b=1;
+        else b=2;
+        printf("%d",b);
+
     }
     return 0;
 }
