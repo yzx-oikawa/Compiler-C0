@@ -1,6 +1,6 @@
 const Int one = 1, two = 2;
 const char ch = 'c', st = 's'; 
-int s, sum[10];
+int s, sum;
 void Getsum(int n)
 {
 	if(n>100);
@@ -12,7 +12,7 @@ void Getsum(int n)
 			getsum(n);
 		}
 		else
-			{printf(sum);}
+			printf(sum);
 	}
 	return;
 }
@@ -22,7 +22,7 @@ int reverse(int n)
 	int na[100];
 	j=0;
 	if(n>100)
-		{return (-1);}
+		return (-1);
 	else;
 	while(j<n)
 	{
@@ -39,9 +39,9 @@ int reverse(int n)
 	}
 	printf("=");
 	if(n/2*2==n)
-		{return (1);}
+		return (1);
 	else 
-		{return (0);}
+		return (0);
 }
 void main()
 {
@@ -49,6 +49,8 @@ void main()
 	char c,r;
 	s=1;
 	sum=0;
+	printf(one+1);
+	printf(ch+1);
 	scanf(x,y,c);
     m=x;
 	a=2;

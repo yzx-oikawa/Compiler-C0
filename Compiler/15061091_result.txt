@@ -58,7 +58,6 @@ Write statement
 	Factor
 	Expression end
 statement end
-statement end
 Return statement
 Statements end
 Voidfuncdef end
@@ -89,7 +88,6 @@ Return statement
 	Item
 	Factor
 	Expression end
-statement end
 Else statement:
 While statement begin:
 	condition
@@ -187,14 +185,12 @@ Return statement
 	Item
 	Factor
 	Expression end
-statement end
 Else statement:
 Return statement
 	Expression begin
 	Item
 	Factor
 	Expression end
-statement end
 Statements end
 Retfuncdef end:
 Mainfunc begin:
@@ -210,6 +206,20 @@ Assign statement
 	Expression end
 Assign statement
 	Expression begin
+	Item
+	Factor
+	Expression end
+Write statement
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Expression end
+Write statement
+	Expression begin
+	Item
+	Factor
 	Item
 	Factor
 	Expression end

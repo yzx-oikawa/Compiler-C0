@@ -4,7 +4,7 @@ const	int	two	2
 const	char	ch	c
 const	char	st	s
 var	int	s	
-var	int	sum	10
+var	int	sum	
 func	void	getsum	
 para	int	n	
 >	n	100	
@@ -17,13 +17,14 @@ bz	Label3
 assign	t1		sum
 +	s	1	t2
 assign	t2		s
-call	getsum		
 push	n		
+call	getsum		
 goto	Label4		
 Label3	:		
 print		sum	
 Label4	:		
 Label2	:		
+ret	none		
 ret	none		
 func	int	reverse	
 para	int	n	
@@ -32,38 +33,40 @@ var	int	na	100
 assign	0		j
 >	n	100	
 bz	Label5		
-oppo			1
-ret	1		
+assign	1	-	t1
+ret	t1		
 goto	Label6		
 Label5	:		
 Label6	:		
 Label7	:		
 <	j	n	
 bz	Label8		
--	n	1	t3
--	t3	j	t4
+-	n	1	t2
+-	t2	j	t3
++	j	1	t4
+arrass	t4	t3	na
 +	j	1	t5
-arrass	t5	t4	na
-+	j	1	t6
-assign	t6		j
+assign	t5		j
 goto	Label7		
 Label8	:		
-print	sum		
-arrget	na	0	t7
-print		t7	
+print	sum: 		
+arrget	na	0	t6
+print		t6	
 assign	1		j
 Label9	:		
 <	j	n	
 bz	Label10		
-arrget	na	j	t8
-print		t8	
-+	j	1	t9
-assign	t9		j
+print	+		
+arrget	na	j	t7
+print		t7	
++	j	1	t8
+assign	t8		j
 goto	Label9		
 Label10	:		
-/	n	2	t10
-*	t10	2	t11
-==	t11	n	
+print	=		
+/	n	2	t9
+*	t9	2	t10
+==	t10	n	
 bz	Label11		
 ret	1		
 goto	Label12		
@@ -81,10 +84,13 @@ var	char	c
 var	char	r	
 assign	1		s
 assign	0		sum
++	one	1	t1
+print		t1	
++	ch	1	t2
+print		t2	
 scan	x		
 scan	y		
 scan	c		
-scan	n		
 assign	x		m
 assign	2		a
 assign	1		i
@@ -98,13 +104,13 @@ Label14	:
 Label15	:		
 <=	i	y	
 bz	Label16		
-/	x	i	t12
-*	t12	i	t13
-==	t13	x	
+/	x	i	t3
+*	t3	i	t4
+==	t4	x	
 bz	Label17		
-/	y	i	t14
-*	t14	i	t15
-==	t15	y	
+/	y	i	t5
+*	t5	i	t6
+==	t6	y	
 bz	Label18		
 assign	i		a
 goto	Label19		
@@ -113,45 +119,50 @@ Label19	:
 goto	Label20		
 Label17	:		
 Label20	:		
-+	i	1	t16
-assign	t16		i
++	i	1	t7
+assign	t7		i
 goto	Label15		
 Label16	:		
-*	x	y	t17
-/	t17	a	t18
-assign	t18		m
+*	x	y	t8
+/	t8	a	t9
+assign	t9		m
 ==	c	103	
 bz	Label21		
-print	gcd		
+print	gcd: 		
 print		a	
 goto	Labeleoc1		
 Label21	:		
 ==	c	108	
 bz	Label22		
-print	lcm		
+print	lcm: 		
 print		m	
 goto	Labeleoc1		
 Label22	:		
-print	errr		
+print	error		
 Labeleoc1	:		
+scan	n		
+push	n		
 call	reverse		
+assign	ret		t10
+assign	t10		r
 push	n		
-assign	ret		t19
-assign	t19		r
 call	getsum		
-push	n		
 ==	r	0	
 bz	Label23		
-print	nisodd		
+print	n is odd		
 goto	Labeleoc2		
 Label23	:		
 ==	r	1	
 bz	Label24		
-print	niseven		
+print	n is even		
 goto	Labeleoc2		
 Label24	:		
-print	err		
+print	error		
 Labeleoc2	:		
-print		1	
-oppo			m
-print		m	
+assign	1	-	t11
+print		t11	
+-	x	y	t12
+assign	t12	-	t13
+print		t13	
+assign	m	-	t14
+print		t14	
