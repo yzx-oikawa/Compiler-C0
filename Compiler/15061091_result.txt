@@ -5,8 +5,9 @@ Constdec begin:
 Constdec end
 Vardec begin:
 	Vardef
+	Vardef
 Vardec end
-Voidfuncdef begin:
+Retfuncdef begin:
 	Parameters
 Statements begin:
 If statement begin:
@@ -15,6 +16,74 @@ If statement begin:
 	Item
 	Factor
 	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Return statement
+	Expression begin
+	Item
+	Factor
+	Factor
+	Expression begin
+	Item
+	Factor
+	Factor
+	Item
+	Factor
+	Expression end
+	Item
+	Factor
+	Item
+	Factor
+	Item
+	Factor
+	Factor
+	Item
+	Factor
+	Expression begin
+	Item
+	Factor
+	Factor
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Expression end
+	Expression end
+	Expression end
+Else statement:
+Return statement
+	Expression begin
+	Item
+	Factor
+	Factor
+Return funcuse
+	Value Parameters
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Expression end
+	Expression end
+Statements end
+Retfuncdef end:
+Retfuncdef begin:
+	Parameters
+Statements begin:
+If statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Return statement
 	Expression begin
 	Item
 	Factor
@@ -30,6 +99,252 @@ If statement begin:
 	Item
 	Factor
 	Expression end
+If statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Return statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+statement end
+Else statement:
+Return statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+statement end
+Else statement:
+If statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+If statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Return statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+statement end
+Else statement:
+statement end
+Else statement:
+Return statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+Statements end
+Retfuncdef end:
+Retfuncdef begin:
+	Parameters
+Statements begin:
+Return statement
+	Expression begin
+	Item
+	Factor
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Expression end
+	Factor
+	Expression end
+Statements end
+Retfuncdef end:
+Voidfuncdef begin:
+	Parameters
+Statements begin:
+Vardec begin:
+	Vardef
+Vardec end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+While statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Write statement
+	String
+	Expression begin
+	Item
+	Factor
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Expression end
+statement end
+Statements end
+Voidfuncdef end
+Voidfuncdef begin:
+	Parameters
+Statements begin:
+Vardec begin:
+	Vardef
+Vardec end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression begin
+	Item
+	Factor
+Return funcuse
+	Value Parameters
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression end
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+While statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+While statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Expression end
+While statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Expression end
+If statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
 Assign statement
 	Expression begin
 	Item
@@ -41,6 +356,19 @@ Assign statement
 	Expression begin
 	Item
 	Factor
+	Item
+	Factor
+	Expression end
+statement end
+Else statement:
+statement end
+If statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
 	Item
 	Factor
 	Expression end
@@ -50,273 +378,63 @@ Void funcuse
 	Item
 	Factor
 	Expression end
-statement end
-Else statement:
-Write statement
 	Expression begin
 	Item
 	Factor
 	Expression end
-statement end
-Return statement
+Else statement:
+If statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Void funcuse
+	Value Parameters
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Else statement:
 Statements end
 Voidfuncdef end
-Retfuncdef begin:
-	Parameters
+Voidfuncdef begin:
 Statements begin:
 Vardec begin:
 	Vardef
 	Vardef
-Vardec end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-If statement begin:
-	condition
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression end
-Return statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-Else statement:
-While statement begin:
-	condition
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Item
-	Factor
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Item
-	Factor
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Item
-	Factor
-	Expression end
-statement end
-Write statement
-	String
-Write statement
-	Expression begin
-	Item
-	Factor
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-While statement begin:
-	condition
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression end
-Write statement
-	String
-	Expression begin
-	Item
-	Factor
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Item
-	Factor
-	Expression end
-statement end
-Write statement
-	String
-If statement begin:
-	condition
-	Expression begin
-	Item
-	Factor
-	Factor
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression end
-Return statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-Else statement:
-Return statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-Statements end
-Retfuncdef end:
-Mainfunc begin:
-Statements begin:
-Vardec begin:
-	Vardef
+op DUPLICATE DEFINE
 	Vardef
 Vardec end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-Write statement
-	Expression begin
-	Item
-	Factor
-	Item
-	Factor
-	Expression end
-Write statement
-	Expression begin
-	Item
-	Factor
-	Item
-	Factor
-	Expression end
 Read statement
+Write statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+Write statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+Write statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+Write statement
+	String
 Assign statement
 	Expression begin
 	Item
-	Factor
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-If statement begin:
-	condition
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-statement end
-Else statement:
-While statement begin:
-	condition
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression end
-If statement begin:
-	condition
-	Expression begin
-	Item
-	Factor
-	Factor
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression end
-If statement begin:
-	condition
-	Expression begin
-	Item
-	Factor
-	Factor
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-statement end
-Else statement:
-statement end
-Else statement:
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Item
-	Factor
-	Expression end
-statement end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Factor
 	Factor
 	Expression end
 Switch statement:
@@ -325,24 +443,293 @@ Switch statement:
 	Factor
 	Expression end
 Case statement
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Expression end
 Write statement
-	String
 	Expression begin
 	Item
 	Factor
 	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+statement end
 Case statement
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Expression end
+Write statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+statement end
+Case statement
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Factor
+	Expression end
+Write statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+statement end
+Case statement
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+If statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Write statement
+	String
+statement end
+Else statement:
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Factor
+	Expression end
+Write statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+statement end
+statement end
+If statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
 Write statement
 	String
 	Expression begin
 	Item
 	Factor
 	Expression end
-Default statement
+Write statement
+	String
+statement end
+Else statement:
+Statements end
+Voidfuncdef end
+Voidfuncdef begin:
+Statements begin:
+Constdec begin:
+	Constdef
+Constdec end
+Vardec begin:
+	Vardef
+Vardec end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+While statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Expression end
+statement end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Item
+	Factor
+	Expression end
+Void funcuse
+	Value Parameters
+	Expression begin
+	Item
+	Factor
+Return funcuse
+	Value Parameters
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+Return funcuse
+	Value Parameters
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Item
+	Factor
+	Expression end
+	Expression end
+	Expression begin
+	Item
+	Factor
+Return funcuse
+	Value Parameters
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression end
+Void funcuse
+	Value Parameters
+	Expression begin
+	Item
+	Factor
+	Expression end
+Statements end
+Voidfuncdef end
+Voidfuncdef begin:
+Statements begin:
+Vardec begin:
+	Vardef
+Vardec end
+Read statement
+While statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression begin
+	Item
+	Factor
+	Expression end
 Write statement
 	String
 Read statement
-Assign statement
+statement end
+Write statement
 	Expression begin
 	Item
 	Factor
@@ -353,8 +740,45 @@ Return funcuse
 	Factor
 	Expression end
 	Expression end
-Void funcuse
+Statements end
+Voidfuncdef end
+Voidfuncdef begin:
+Statements begin:
+Vardec begin:
+	Vardef
+Vardec end
+Read statement
+If statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+Return funcuse
 	Value Parameters
+	Expression begin
+	Item
+	Factor
+	Expression end
+	Expression end
+Write statement
+	String
+Else statement:
+Write statement
+	String
+Statements end
+Voidfuncdef end
+Mainfunc begin:
+Statements begin:
+Vardec begin:
+	Vardef
+Vardec end
+Read statement
+While statement begin:
+	condition
+	Expression begin
+	Item
+	Factor
+	Expression end
 	Expression begin
 	Item
 	Factor
@@ -363,37 +787,40 @@ Switch statement:
 	Expression begin
 	Item
 	Factor
+	Expression begin
+	Item
+	Factor
+	Item
+	Factor
+	Factor
+	Expression end
+	Factor
+	Factor
+	Item
+	Factor
+	Item
+	Factor
 	Expression end
 Case statement
-Write statement
-	String
+Void funcuse
 Case statement
-Write statement
-	String
+Void funcuse
+Case statement
+Void funcuse
+Case statement
+Void funcuse
 Default statement
 Write statement
 	String
+	Expression begin
+	Item
+	Factor
+	Expression end
+statement end
 Write statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-Write statement
-	Expression begin
-	Item
-	Factor
-	Expression begin
-	Item
-	Factor
-	Item
-	Factor
-	Expression end
-	Expression end
-Write statement
-	Expression begin
-	Item
-	Factor
-	Expression end
+	String
+Read statement
+statement end
 Statements end
 Mainfunc end
 Program end

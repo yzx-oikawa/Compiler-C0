@@ -64,7 +64,7 @@ char exprtemp[MAXIDENTLEN]; //exprt的字符串形式
 char labtemp[MAXIDENTLEN]; //labelt的字符串形式
 char exprret[MAXIDENTLEN]; //表达式返回的字符串
 char factret[MAXIDENTLEN]; //因子返回的字符串
-char itemret[MAXIDENTLEN]; //项返回的字符串
+char termret[MAXIDENTLEN]; //项返回的字符串
 char strret[MAXIDENTLEN];  //写语句打印的字符串
 
 int tntype[MAXIDENTLEN][MAXIDENTLEN];//四元式中的临时变量tn类型，第一个参数是函数的location，第二个参数是n
@@ -91,9 +91,9 @@ int parapc;
 FILE *IN, *OUT, *INTER, *ASSEM;
 
 int blankflag=0; //0-跳过空格 1-不跳过空格
+int upperflag=0; //0-大写转换为小写 1-输入为字符和常量时区分大小写
 int vardecbegflag=0;//1-变量声明开始
 int vardecendflag=1;//1-变量声明结束
-//int braceflag=0;
 int logflag;
 int gotomainflag=0;//编译时先跳转到main
 
@@ -118,7 +118,7 @@ int voidfuncdef(); //无返回值函数定义
 int parameters(); //参数
 int mainfunc(); //主函数
 int expression(); //表达式
-int item(); //项
+int term(); //项
 int factor(); //因子
 int statements(); //复合语句
 int statement();//语句
@@ -137,7 +137,6 @@ int readstatement(); //读语句
 int writestatement(); //写语句
 int returnstatement(); //返回语句
 int constant();//常量
-int constforcase();
 int strings();//字符串
 int checkiflog();//检查是否登录符号表
 int checkiftn();//检查是否为四元式的中间变量并返回序号
@@ -973,7 +972,9 @@ int constdef()
                     sym=nextsym();
                     if(sym==sinquo)//单引号
                     {
+                        upperflag=1;
                         sym=nextsym();
+                        upperflag=0;
                         if(sym==chartype||sym==numtype||
                            (sym>=add&&sym<=divi)||sym==underline)//字符
                         {
@@ -1812,10 +1813,12 @@ int casestatement(char *switchlabel) //情况子语句
     {
         strcpy(intercode[++interpc].inter0,"==");
         strcpy(intercode[interpc].inter1,switchlabel);
+        upperflag=1;
         sym=nextsym();
+        upperflag=0;
         if(sym==sinquo||sym==inttype||sym==numtype||sym==add||sym==sub)//单引号括起来的字母或数字，或者整数
         {
-            constflag=constforcase();
+            constflag=constant();
             if(constflag>0){//常量
                 printf("Case statement\n");
                 fprintf(OUT,"Case statement\n");
@@ -2084,39 +2087,8 @@ int returnstatement() //返回语句
 
 /*＜常量＞ ::=  ＜整数＞|＜字符＞
   ＜字符＞ ::='＜加法运算符＞'｜'＜乘法运算符＞'｜'＜字母＞'｜'＜数字＞'*/
-int constant()
-{
-    //sym此时为单引号或者整数
-    if(sym==sinquo){//单引号
-        sym=nextsym();
-        if((sym>=add&&sym<=divi)||sym==chartype||sym==underline||sym==numtype)
-        {
-            sym=nextsym();
-            if(sym==sinquo)//单引号
-                return 1;
-            else{
-                printf("constanterror\n");
-                return 0;
-            }
-        }
-        else{
-            sym=nextsym();//单引号
-            return 0;
-        }
-    }
-    else if(sym==inttype||sym==numtype)
-        return 1;
-    else if(sym==add||sym==sub)//加号或减号
-    {
-        sym=nextsym();
-        if(sym==inttype||sym==numtype)
-            return 1;
-    }
-    return 0;
-}
-
 /*情况语句中，switch后面的表达式和case后面的常量只允许出现int和char类型*/
-int constforcase()
+int constant()
 {
     //sym此时为单引号或者整数或正负号
     if(sym==sinquo){//单引号
@@ -2185,23 +2157,23 @@ int expression()//表达式
 {
     char expr[3][MAXIDENTLEN];
     int exprpc=1;
-    int subitemflag=0;//第一个项取负
+    int subtermflag=0;//第一个项取负
     printf("\tExpression begin\n");
     fprintf(OUT,"\tExpression begin\n");
     if(sym==add||sym==sub){
         if(sym==sub)
-            subitemflag=1;
+            subtermflag=1;
         sym=nextsym();
     }
     while(1)
     {
-        item();
-        if(subitemflag==1)
+        term();
+        if(subtermflag==1)
         {
                 strcpy(intercode[++interpc].inter0,"assign");
-                strcpy(intercode[interpc].inter1,itemret);
+                strcpy(intercode[interpc].inter1,termret);
                 strcpy(intercode[interpc].inter2,"-");
-                strcpy(tntoken,itemret);
+                strcpy(tntoken,termret);
                 if(tncheckiflog()>=0)//是标识符
                     tntype[symloca][exprt]=symtab[tabi].type;
                 else if(tncheckiftn()>0)//是tn
@@ -2211,10 +2183,10 @@ int expression()//表达式
                 itoa(exprt++,exprtemp,10);
                 strcpy(intercode[interpc].inter3,"t");
                 strcat(intercode[interpc].inter3,exprtemp);
-                strcpy(itemret,intercode[interpc].inter3);
-                subitemflag=0;
+                strcpy(termret,intercode[interpc].inter3);
+                subtermflag=0;
         }
-        strcpy(expr[exprpc],itemret);
+        strcpy(expr[exprpc],termret);
         if(sym==add||sym==sub){
             if(exprpc==1) exprpc=2;
             else if(exprpc==2) exprpc=1;
@@ -2284,12 +2256,12 @@ int expression()//表达式
 }
 
 /*＜项＞ ::= ＜因子＞{＜乘法运算符＞＜因子＞}*/
-int item() //项
+int term() //项
 {
     char ite[3][MAXIDENTLEN];
     int itepc=1;
-    printf("\tItem\n");
-    fprintf(OUT,"\tItem\n");
+    printf("\tTerm\n");
+    fprintf(OUT,"\tTerm\n");
     while(1)
     {
         factor();
@@ -2372,7 +2344,7 @@ int item() //项
                 strcat(intercode[interpc].inter3,exprtemp);
                 strcpy(ite[1],intercode[interpc].inter3);
             }
-            strcpy(itemret,ite[1]);
+            strcpy(termret,ite[1]);
             return;
         }
     }
@@ -2471,7 +2443,9 @@ int factor() //因子
             strcpy(factret,ident);
             return;
         case sinquo://字符
+            upperflag=1;
             sym=nextsym();
+            upperflag=0;
             if((sym>=add&&sym<=divi)||sym==chartype||sym==numtype){
                 itoa((int)token[0],ident,10);
                 strcpy(factret,ident);
@@ -2524,11 +2498,17 @@ int nextsym()
     }
     else if (isalpha(ch)||ch=='_') //如果是字母
     {
-        token[t]=tolower(ch); //统一存成小写
+        if(upperflag==0)
+            token[t]=tolower(ch); //统一存成小写
+        else
+            token[t]=ch;
         ch=fgetc(IN);
         while(isdigit(ch)||isalpha(ch)||ch=='_')
         {
-            token[++t]=tolower(ch);
+            if(upperflag==0)
+                token[++t]=tolower(ch);
+            else
+                token[++t]=ch;
             ch=fgetc(IN);
             continue;
         }
@@ -2672,19 +2652,19 @@ int nextsym()
 int main()
 {
     char strline[MAXIDENTLEN];
-//  IN = fopen("15061091_test.txt","r");
+    IN = fopen("15061091_test.txt","r");
     OUT = fopen("15061091_result.txt","w");
-    INTER = fopen("inter.txt","w");
-    ASSEM = fopen("assem.txt","w");
+    INTER = fopen("C:\\Users\\Administrator\\Desktop\\inter.txt","w");
+    ASSEM = fopen("C:\\Users\\Administrator\\Desktop\\assem.txt","w");
     /*C:\\Users\\Administrator\\Desktop\\*/
-    printf("Please input the test file:\n");
-    while(IN == NULL){
-        gets(strline);
-        IN = fopen(strline,"r");
-        if(IN == NULL)
-            printf("NO SUCH FILE! %s\n", strline);
-
-    }
+//    printf("Please input the test file:\n");
+//    while(IN == NULL){
+//        gets(strline);
+//        IN = fopen(strline,"r");
+//        if(IN == NULL)
+//            printf("NO SUCH FILE! %s\n", strline);
+//
+//    }
     if(IN == NULL){
         printf("NO SUCH FILE!\n");
     }
