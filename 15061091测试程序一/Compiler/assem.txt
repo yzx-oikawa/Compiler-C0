@@ -1,0 +1,639 @@
+.kdata
+	enter: .ASCIIZ "\n"
+	str0: .ASCIIZ "sum: "
+	str1: .ASCIIZ "+"
+	str2: .ASCIIZ "="
+	str3: .ASCIIZ "gcd: "
+	str4: .ASCIIZ "lcm: "
+	str5: .ASCIIZ "error"
+	str6: .ASCIIZ "n is odd"
+	str7: .ASCIIZ "n is even"
+.text
+	li $fp, 0x00000000
+	li $sp, 0x00000000
+	li $t0, 0x00002000
+	li $s0,1
+	sw $s0,0($fp)
+	addi $fp,$fp,4
+	or $sp,$0,$fp
+
+	li $s0,2
+	sw $s0,0($fp)
+	addi $fp,$fp,4
+	or $sp,$0,$fp
+
+	li $s0,99
+	sw $s0,0($fp)
+	addi $fp,$fp,4
+	or $sp,$0,$fp
+
+	li $s0,115
+	sw $s0,0($fp)
+	addi $fp,$fp,4
+	or $sp,$0,$fp
+
+	addi $fp,$fp,4
+	or $sp,$0,$fp
+
+	addi $fp,$fp,4
+	or $sp,$0,$fp
+
+	addi $sp,$fp,4
+	j Label_main
+Label_getsum:
+	sw $ra,4($sp)
+	addi $fp,$sp,16
+	addi $sp,$fp,4
+	addi $sp,$sp,8
+
+	addi $sp,$sp,4
+
+	lw $s1,12($fp)
+	ori $s2,$0,100
+	sub $s0,$s1,$s2
+	blez $s0,Label1
+
+	j Label2
+
+Label1:
+
+	lw $s1,16($0)
+	lw $s2,12($fp)
+	sub $s0,$s1,$s2
+	bgtz $s0,Label3
+
+	lw $s1,20($0)
+	lw $s2,16($0)
+	add $s0,$s1,$s2
+	sw $s0,4($fp)
+
+	lw $s0,4($fp)
+	sw $s0,20($0)
+
+	lw $s1,16($0)
+	ori $s2,$0,1
+	add $s0,$s1,$s2
+	sw $s0,8($fp)
+
+	lw $s0,8($fp)
+	sw $s0,16($0)
+
+
+	sw $fp,16($sp)
+	sw $sp,12($sp)
+	lw $s0,12($fp)
+	sw $s0,28($sp)
+	jal Label_getsum
+
+	j Label4
+
+Label3:
+
+	lw $a0,20($0)
+	li $v0,1
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+Label4:
+
+Label2:
+
+	lw $ra,-12($fp)
+	lw $sp,-4($fp)
+	lw $fp,0($fp)
+	jr $ra
+
+	lw $ra,-12($fp)
+	lw $sp,-4($fp)
+	lw $fp,0($fp)
+	jr $ra
+
+Label_reverse:
+	sw $ra,4($sp)
+	addi $fp,$sp,16
+	addi $sp,$fp,4
+	addi $sp,$sp,40
+
+	addi $sp,$sp,4
+
+	li $s0,0
+	sw $s0,0($sp)
+	addi $sp,$sp,4
+
+	li $s0,0
+	sw $s0,0($sp)
+	addi $sp,$sp,400
+
+	ori $s0,$0,0
+	sw $s0,48($fp)
+
+	lw $s1,44($fp)
+	ori $s2,$0,100
+	sub $s0,$s1,$s2
+	blez $s0,Label5
+
+	ori $s0,$0,1
+	sub $s0,$0,$s0
+	sw $s0,4($fp)
+
+	lw $s0,4($fp)
+	sw $s0,-8($fp)
+	lw $ra,-12($fp)
+	lw $sp,-4($fp)
+	lw $fp,0($fp)
+	jr $ra
+
+	j Label6
+
+Label5:
+
+Label6:
+
+Label7:
+
+	lw $s1,48($fp)
+	lw $s2,44($fp)
+	sub $s0,$s1,$s2
+	bgez $s0,Label8
+
+	lw $s1,44($fp)
+	ori $s2,$0,1
+	sub $s0,$s1,$s2
+	sw $s0,8($fp)
+
+	lw $s1,8($fp)
+	lw $s2,48($fp)
+	sub $s0,$s1,$s2
+	sw $s0,12($fp)
+
+	lw $s1,48($fp)
+	ori $s2,$0,1
+	add $s0,$s1,$s2
+	sw $s0,16($fp)
+
+	lw $s0,16($fp)
+	lw $s1,12($fp)
+	mul $s1,$s1,4
+	addi $s1,$s1,52
+	add $s1,$s1,$fp
+	sw $s0,0($s1)
+
+	lw $s1,48($fp)
+	ori $s2,$0,1
+	add $s0,$s1,$s2
+	sw $s0,20($fp)
+
+	lw $s0,20($fp)
+	sw $s0,48($fp)
+
+	j Label7
+
+Label8:
+
+	la $a0,str0
+	li $v0,4
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	ori $s1,$0,0
+	mul $s1,$s1,4
+	addi $s1,$s1,52
+	add $s1,$s1,$fp
+	lw $s0,0($s1)
+	sw $s0,24($fp)
+
+	lw $a0,24($fp)
+	li $v0,1
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	ori $s0,$0,1
+	sw $s0,48($fp)
+
+Label9:
+
+	lw $s1,48($fp)
+	lw $s2,44($fp)
+	sub $s0,$s1,$s2
+	bgez $s0,Label10
+
+	la $a0,str1
+	li $v0,4
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	lw $s1,48($fp)
+	mul $s1,$s1,4
+	addi $s1,$s1,52
+	add $s1,$s1,$fp
+	lw $s0,0($s1)
+	sw $s0,28($fp)
+
+	lw $a0,28($fp)
+	li $v0,1
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	lw $s1,48($fp)
+	ori $s2,$0,1
+	add $s0,$s1,$s2
+	sw $s0,32($fp)
+
+	lw $s0,32($fp)
+	sw $s0,48($fp)
+
+	j Label9
+
+Label10:
+
+	la $a0,str2
+	li $v0,4
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	lw $s1,44($fp)
+	ori $s2,$0,2
+	div $s0,$s1,$s2
+	sw $s0,36($fp)
+
+	lw $s1,36($fp)
+	ori $s2,$0,2
+	mul $s0,$s1,$s2
+	sw $s0,40($fp)
+
+	lw $s1,40($fp)
+	lw $s2,44($fp)
+	sub $s0,$s1,$s2
+	bne $s1,$s2,Label11
+
+	ori $s0,$0,1
+	sw $s0,-8($fp)
+	lw $ra,-12($fp)
+	lw $sp,-4($fp)
+	lw $fp,0($fp)
+	jr $ra
+
+	j Label12
+
+Label11:
+
+	ori $s0,$0,0
+	sw $s0,-8($fp)
+	lw $ra,-12($fp)
+	lw $sp,-4($fp)
+	lw $fp,0($fp)
+	jr $ra
+
+Label12:
+
+Label_main:
+	addi $sp,$sp,56
+
+	li $s0,0
+	sw $s0,0($sp)
+	addi $sp,$sp,4
+
+	li $s0,0
+	sw $s0,0($sp)
+	addi $sp,$sp,4
+
+	li $s0,0
+	sw $s0,0($sp)
+	addi $sp,$sp,4
+
+	li $s0,0
+	sw $s0,0($sp)
+	addi $sp,$sp,4
+
+	li $s0,0
+	sw $s0,0($sp)
+	addi $sp,$sp,4
+
+	li $s0,0
+	sw $s0,0($sp)
+	addi $sp,$sp,4
+
+	li $s0,0
+	sw $s0,0($sp)
+	addi $sp,$sp,4
+
+	li $s0,0
+	sw $s0,0($sp)
+	addi $sp,$sp,4
+
+	ori $s0,$0,1
+	sw $s0,16($0)
+
+	ori $s0,$0,0
+	sw $s0,20($0)
+
+	lw $s1,0($0)
+	ori $s2,$0,1
+	add $s0,$s1,$s2
+	sw $s0,4($fp)
+
+	lw $a0,4($fp)
+	li $v0,1
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	lw $s1,8($0)
+	ori $s2,$0,1
+	add $s0,$s1,$s2
+	sw $s0,8($fp)
+
+	lw $a0,8($fp)
+	li $v0,11
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	li $v0,5
+	syscall
+	sw $v0,60($fp)
+
+	li $v0,5
+	syscall
+	sw $v0,64($fp)
+
+	li $v0,12
+	syscall
+	sw $v0,84($fp)
+
+	lw $s0,60($fp)
+	sw $s0,72($fp)
+
+	ori $s0,$0,2
+	sw $s0,80($fp)
+
+	ori $s0,$0,1
+	sw $s0,76($fp)
+
+	lw $s1,60($fp)
+	lw $s2,64($fp)
+	sub $s0,$s1,$s2
+	bgez $s0,Label13
+
+	lw $s0,64($fp)
+	sw $s0,60($fp)
+
+	lw $s0,72($fp)
+	sw $s0,64($fp)
+
+	j Label14
+
+Label13:
+
+Label14:
+
+Label15:
+
+	lw $s1,76($fp)
+	lw $s2,64($fp)
+	sub $s0,$s1,$s2
+	bgtz $s0,Label16
+
+	lw $s1,60($fp)
+	lw $s2,76($fp)
+	div $s0,$s1,$s2
+	sw $s0,12($fp)
+
+	lw $s1,12($fp)
+	lw $s2,76($fp)
+	mul $s0,$s1,$s2
+	sw $s0,16($fp)
+
+	lw $s1,16($fp)
+	lw $s2,60($fp)
+	sub $s0,$s1,$s2
+	bne $s1,$s2,Label17
+
+	lw $s1,64($fp)
+	lw $s2,76($fp)
+	div $s0,$s1,$s2
+	sw $s0,20($fp)
+
+	lw $s1,20($fp)
+	lw $s2,76($fp)
+	mul $s0,$s1,$s2
+	sw $s0,24($fp)
+
+	lw $s1,24($fp)
+	lw $s2,64($fp)
+	sub $s0,$s1,$s2
+	bne $s1,$s2,Label18
+
+	lw $s0,76($fp)
+	sw $s0,80($fp)
+
+	j Label19
+
+Label18:
+
+Label19:
+
+	j Label20
+
+Label17:
+
+Label20:
+
+	lw $s1,76($fp)
+	ori $s2,$0,1
+	add $s0,$s1,$s2
+	sw $s0,28($fp)
+
+	lw $s0,28($fp)
+	sw $s0,76($fp)
+
+	j Label15
+
+Label16:
+
+	lw $s1,60($fp)
+	lw $s2,64($fp)
+	mul $s0,$s1,$s2
+	sw $s0,32($fp)
+
+	lw $s1,32($fp)
+	lw $s2,80($fp)
+	div $s0,$s1,$s2
+	sw $s0,36($fp)
+
+	lw $s0,36($fp)
+	sw $s0,72($fp)
+
+	lw $s1,84($fp)
+	ori $s2,$0,103
+	sub $s0,$s1,$s2
+	bne $s1,$s2,Label21
+
+	la $a0,str3
+	li $v0,4
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	lw $a0,80($fp)
+	li $v0,1
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	j Labeleoc1
+
+Label21:
+
+	lw $s1,84($fp)
+	ori $s2,$0,108
+	sub $s0,$s1,$s2
+	bne $s1,$s2,Label22
+
+	la $a0,str4
+	li $v0,4
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	lw $a0,72($fp)
+	li $v0,1
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	j Labeleoc1
+
+Label22:
+
+	la $a0,str5
+	li $v0,4
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+Labeleoc1:
+
+	li $v0,5
+	syscall
+	sw $v0,68($fp)
+
+
+	sw $fp,16($sp)
+	sw $sp,12($sp)
+	lw $s0,68($fp)
+	sw $s0,60($sp)
+	jal Label_reverse
+
+	lw $s0,8($sp)
+	sw $s0,40($fp)
+
+	lw $s0,40($fp)
+	sw $s0,88($fp)
+
+
+	sw $fp,16($sp)
+	sw $sp,12($sp)
+	lw $s0,68($fp)
+	sw $s0,28($sp)
+	jal Label_getsum
+
+	lw $s1,88($fp)
+	ori $s2,$0,0
+	sub $s0,$s1,$s2
+	bne $s1,$s2,Label23
+
+	la $a0,str6
+	li $v0,4
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	j Labeleoc2
+
+Label23:
+
+	lw $s1,88($fp)
+	ori $s2,$0,1
+	sub $s0,$s1,$s2
+	bne $s1,$s2,Label24
+
+	la $a0,str7
+	li $v0,4
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	j Labeleoc2
+
+Label24:
+
+	la $a0,str5
+	li $v0,4
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+Labeleoc2:
+
+	ori $s0,$0,1
+	sub $s0,$0,$s0
+	sw $s0,44($fp)
+
+	lw $a0,44($fp)
+	li $v0,1
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	lw $s1,60($fp)
+	lw $s2,64($fp)
+	sub $s0,$s1,$s2
+	sw $s0,48($fp)
+
+	lw $s0,48($fp)
+	sub $s0,$0,$s0
+	sw $s0,52($fp)
+
+	lw $a0,52($fp)
+	li $v0,1
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+	lw $s0,72($fp)
+	sub $s0,$0,$s0
+	sw $s0,56($fp)
+
+	lw $a0,56($fp)
+	li $v0,1
+	syscall
+	la $a0,enter
+	li $v0,4
+	syscall
+
+Label_end:
