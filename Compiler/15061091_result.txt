@@ -13,42 +13,42 @@ Statements begin:
 If statement begin:
 	condition
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Return statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Factor
 	Expression begin
-	Item
+	Term
 	Factor
 	Factor
-	Item
+	Term
 	Factor
 	Expression end
-	Item
+	Term
 	Factor
-	Item
+	Term
 	Factor
-	Item
+	Term
 	Factor
 	Factor
-	Item
-	Factor
-	Expression begin
-	Item
-	Factor
+	Term
 	Factor
 	Expression begin
-	Item
+	Term
 	Factor
-	Item
+	Factor
+	Expression begin
+	Term
+	Factor
+	Term
 	Factor
 	Expression end
 	Expression end
@@ -56,120 +56,120 @@ Return statement
 Else statement:
 Return statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Factor
 Return funcuse
 	Value Parameters
 	Expression begin
-	Item
+	Term
 	Factor
-	Item
-	Factor
-	Expression end
-	Expression end
-Statements end
-Retfuncdef end:
-Retfuncdef begin:
-	Parameters
-Statements begin:
-If statement begin:
-	condition
-	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression end
-Return statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-Else statement:
-If statement begin:
-	condition
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression end
-If statement begin:
-	condition
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression end
-Return statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-statement end
-Else statement:
-Return statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-statement end
-Else statement:
-If statement begin:
-	condition
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression end
-If statement begin:
-	condition
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression end
-Return statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-statement end
-Else statement:
-statement end
-Else statement:
-Return statement
-	Expression begin
-	Item
-	Factor
 	Expression end
 Statements end
 Retfuncdef end:
 Retfuncdef begin:
 	Parameters
 Statements begin:
+If statement begin:
+	condition
+	Expression begin
+	Term
+	Factor
+	Expression end
+	Expression begin
+	Term
+	Factor
+	Expression end
 Return statement
 	Expression begin
-	Item
+	Term
+	Factor
+	Expression end
+Else statement:
+If statement begin:
+	condition
+	Expression begin
+	Term
+	Factor
+	Expression end
+	Expression begin
+	Term
+	Factor
+	Expression end
+If statement begin:
+	condition
+	Expression begin
+	Term
+	Factor
+	Expression end
+	Expression begin
+	Term
+	Factor
+	Expression end
+Return statement
+	Expression begin
+	Term
+	Factor
+	Expression end
+statement end
+Else statement:
+Return statement
+	Expression begin
+	Term
+	Factor
+	Expression end
+statement end
+Else statement:
+If statement begin:
+	condition
+	Expression begin
+	Term
+	Factor
+	Expression end
+	Expression begin
+	Term
+	Factor
+	Expression end
+If statement begin:
+	condition
+	Expression begin
+	Term
+	Factor
+	Expression end
+	Expression begin
+	Term
+	Factor
+	Expression end
+Return statement
+	Expression begin
+	Term
+	Factor
+	Expression end
+statement end
+Else statement:
+statement end
+Else statement:
+Return statement
+	Expression begin
+	Term
+	Factor
+	Expression end
+Statements end
+Retfuncdef end:
+Retfuncdef begin:
+	Parameters
+Statements begin:
+Return statement
+	Expression begin
+	Term
 	Factor
 	Expression begin
-	Item
+	Term
 	Factor
-	Item
+	Term
 	Factor
 	Expression end
 	Factor
@@ -184,34 +184,34 @@ Vardec begin:
 Vardec end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 While statement begin:
 	condition
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Write statement
 	String
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
-	Item
+	Term
 	Factor
 	Expression end
 statement end
@@ -225,138 +225,138 @@ Vardec begin:
 Vardec end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression begin
-	Item
+	Term
 	Factor
 Return funcuse
 	Value Parameters
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression end
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 While statement begin:
 	condition
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
-	Factor
-	Expression end
-While statement begin:
-	condition
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Item
+	Term
 	Factor
 	Expression end
 While statement begin:
 	condition
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
-	Item
+	Term
+	Factor
+	Expression end
+While statement begin:
+	condition
+	Expression begin
+	Term
+	Factor
+	Expression end
+	Expression begin
+	Term
+	Factor
+	Expression begin
+	Term
+	Factor
+	Expression end
+	Expression end
+Assign statement
+	Expression begin
+	Term
+	Factor
+	Term
 	Factor
 	Expression end
 If statement begin:
 	condition
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression begin
-	Item
-	Factor
-	Expression end
 	Expression end
 Assign statement
 	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
+	Term
 	Factor
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
+	Factor
+	Expression begin
+	Term
+	Factor
+	Expression end
+	Expression end
+Assign statement
+	Expression begin
+	Term
+	Factor
+	Expression end
+	Expression begin
+	Term
 	Factor
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
-	Item
+	Term
 	Factor
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
-	Item
+	Term
 	Factor
 	Expression end
 statement end
@@ -365,42 +365,42 @@ statement end
 If statement begin:
 	condition
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Void funcuse
 	Value Parameters
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Else statement:
 If statement begin:
 	condition
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Void funcuse
 	Value Parameters
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Else statement:
@@ -411,107 +411,106 @@ Statements begin:
 Vardec begin:
 	Vardef
 	Vardef
-op DUPLICATE DEFINE
 	Vardef
 Vardec end
 Read statement
 Write statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Write statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Write statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Write statement
 	String
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Switch statement:
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Case statement
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
-	Item
+	Term
 	Factor
 	Expression end
 Write statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 statement end
 Case statement
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
-	Item
+	Term
 	Factor
 	Expression end
 Write statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 statement end
 Case statement
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Factor
 	Expression end
 Write statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 statement end
 Case statement
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 If statement begin:
 	condition
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Write statement
@@ -520,13 +519,13 @@ statement end
 Else statement:
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Factor
 	Expression end
 Write statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 statement end
@@ -534,13 +533,13 @@ statement end
 If statement begin:
 	condition
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Write statement
 	String
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Write statement
@@ -559,152 +558,152 @@ Vardec begin:
 Vardec end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 While statement begin:
 	condition
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
-	Factor
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
-	Factor
-	Item
+	Term
 	Factor
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
-	Item
+	Expression end
+	Expression begin
+	Term
+	Factor
+	Term
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Term
+	Factor
+	Term
 	Factor
 	Expression end
 statement end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
-	Factor
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
-	Factor
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
-	Factor
-	Expression end
-Assign statement
-	Expression begin
-	Item
-	Factor
-	Expression end
-	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Assign statement
 	Expression begin
-	Item
+	Term
+	Factor
+	Expression end
+	Expression begin
+	Term
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Term
+	Factor
+	Expression end
+	Expression begin
+	Term
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Term
+	Factor
+	Expression end
+	Expression begin
+	Term
+	Factor
+	Expression end
+Assign statement
+	Expression begin
+	Term
 	Factor
 	Expression end
 Void funcuse
 	Value Parameters
 	Expression begin
-	Item
+	Term
 	Factor
 Return funcuse
 	Value Parameters
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 Return funcuse
 	Value Parameters
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
-	Item
+	Term
 	Factor
 	Expression end
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 Return funcuse
 	Value Parameters
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression end
 Void funcuse
 	Value Parameters
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Statements end
@@ -718,11 +717,11 @@ Read statement
 While statement begin:
 	condition
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Write statement
@@ -731,12 +730,12 @@ Read statement
 statement end
 Write statement
 	Expression begin
-	Item
+	Term
 	Factor
 Return funcuse
 	Value Parameters
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression end
@@ -751,12 +750,12 @@ Read statement
 If statement begin:
 	condition
 	Expression begin
-	Item
+	Term
 	Factor
 Return funcuse
 	Value Parameters
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression end
@@ -776,29 +775,29 @@ Read statement
 While statement begin:
 	condition
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 Switch statement:
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression begin
-	Item
+	Term
 	Factor
-	Item
+	Term
 	Factor
 	Factor
 	Expression end
 	Factor
 	Factor
-	Item
+	Term
 	Factor
-	Item
+	Term
 	Factor
 	Expression end
 Case statement
@@ -813,7 +812,7 @@ Default statement
 Write statement
 	String
 	Expression begin
-	Item
+	Term
 	Factor
 	Expression end
 statement end
