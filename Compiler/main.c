@@ -174,6 +174,7 @@ void saveerror()//保存错误信息
     strcpy(errtype[16],"LACK EQUALMARK");
     strcpy(errtype[17],"LACK COMMA");
     strcpy(errtype[18],"LACK RETURN VALUE");
+    strcpy(errtype[19],"LACK COLON");
 }
 
 void printerror(int type)//打印错误信息
@@ -432,7 +433,7 @@ int vardef()
                 else printerror(15);
             }
             else
-                printerror(15);
+                printerror(1);
         }
         else if(sym==inttype||sym==numtype)//无符号整数
         {
@@ -460,7 +461,7 @@ int vardef()
                 else printerror(15);
             }
             else
-                printerror(15);
+                printerror(1);
         }
     }
 }
@@ -470,6 +471,9 @@ int differ()
 {
     //读到了类型标识符
     while(1){
+        if(sym==intsym||sym==charsym)
+            symtype=(sym==intsym?1:0);
+        else if(sym==voidsym) return;
         sym=nextsym();
         if(sym==identsym||sym==chartype)//标识符
         {
@@ -521,8 +525,8 @@ int differ()
             symtype=(sym==intsym?1:0);
             continue;
         }
-        if(sym==voidsym||sym==rbrace||sym==ifsym||sym==whilesym
-           ||sym==lbrace||sym==scanfsym||sym==printfsym||sym==switchsym
+        if(sym==voidsym||sym==rbrace||sym==lbrace||sym==ifsym||sym==whilesym
+           ||sym==scanfsym||sym==printfsym||sym==switchsym
            ||sym==returnsym||sym==identsym||sym==chartype)
             return;
     }
@@ -535,16 +539,14 @@ int retfuncdef()
     exprt=1;
     while(1){
         fprintf(OUT,"Retfuncdef begin:\n");
-
         if(sym==lbrace)//左花括号
         {
             sym=nextsym();
             statements();//复合语句
-            if(sym==rbrace)//右花括号
-            {
-                fprintf(OUT,"Retfundef end:\n");
-                return;
-            }
+            if(sym!=rbrace)//右花括号
+                printerror(14);
+            fprintf(OUT,"Retfundef end:\n");
+            return;
         }
         else if(sym==lparent)//左括号
         {
@@ -552,20 +554,17 @@ int retfuncdef()
             if(logflag==-1)
                 symtab[tabpc-sympara-1].length=sympara+1;
             if(sym==rparent)//右括号
-            {
                 sym=nextsym();
-                if(sym==lbrace)//左花括号
-                {
-                    sym=nextsym();
-                    statements();//复合语句
-                    if(sym==rbrace)//右花括号
-                    {
-                        fprintf(OUT,"Retfuncdef end:\n");
-                        tncount[symloca]=exprt-1;
-                        return;
-                    }
-                }
-            }
+            if(sym==lbrace)//左花括号
+                sym=nextsym();
+            else
+                printerror(13);
+            statements();//复合语句
+            if(sym!=rbrace)//右花括号
+                printerror(14);
+            fprintf(OUT,"Retfuncdef end:\n");
+            tncount[symloca]=exprt-1;
+            return;
         }
     }
 }
@@ -606,37 +605,33 @@ int voidfuncdef()
                 if(logflag==-1)
                     symtab[tabpc-sympara-1].length=sympara+1;//全局常量、全局变量
                 if(sym==rparent)//右括号
-                {
                     sym=nextsym();
-                    symtab[tabpc-sympara-1].length=sympara+1;//全局常量、全局变量
-                    if(sym==lbrace)//左花括号
-                    {
-                        sym=nextsym();
-                        statements();//语句
-                        if(sym==rbrace)//右花括号
-                        {
-                            fprintf(OUT,"Voidfuncdef end\n");
-                            strcpy(intercode[++interpc].inter0,"ret");
-                            strcpy(intercode[interpc].inter1,"none");
-                            tncount[symloca]=exprt-1;
-                            return;
-                        }
-                    }
-                }
+                symtab[tabpc-sympara-1].length=sympara+1;//全局常量、全局变量
+                if(sym==lbrace)//左花括号
+                    sym=nextsym();
+                else
+                    printerror(13);
+                statements();//语句
+                if(sym!=rbrace)//右花括号
+                    printerror(14);
+                fprintf(OUT,"Voidfuncdef end\n");
+                strcpy(intercode[++interpc].inter0,"ret");
+                strcpy(intercode[interpc].inter1,"none");
+                tncount[symloca]=exprt-1;
+                return;
             }
             else if(sym==lbrace)//左花括号
             {
                 symtab[tabpc].length=0;
                 sym=nextsym();
                 statements();//复合语句
-                if(sym==rbrace)//右花括号
-                {
-                    fprintf(OUT,"Voidfuncdef end\n");
-                    strcpy(intercode[++interpc].inter0,"ret");
-                    strcpy(intercode[interpc].inter1,"none");
-                    tncount[symloca]=exprt-1;
-                    return;
-                }
+                if(sym!=rbrace)//右花括号
+                    printerror(14);
+                fprintf(OUT,"Voidfuncdef end\n");
+                strcpy(intercode[++interpc].inter0,"ret");
+                strcpy(intercode[interpc].inter1,"none");
+                tncount[symloca]=exprt-1;
+                return;
             }
         }
     }
@@ -648,7 +643,7 @@ int parameters()//参数表
     fprintf(OUT,"\tParameters\n");
     sympara=0;
     //sym此时为左括号
-    while(sym!=rparent)
+    while(1)
     {
         sym=nextsym();
         if(sym==intsym||sym==charsym)//类型标识符
@@ -679,6 +674,10 @@ int parameters()//参数表
                     continue;
                 }
                 else if(sym==rparent) return;
+                else{
+                    printerror(1);
+                    return;
+                }
             }
         }
     }
@@ -706,23 +705,23 @@ int mainfunc()
     strcpy(intercode[interpc].inter2,"main");
     sym=nextsym();
     if(sym==lparent)//左括号
-    {
         sym=nextsym();
-        if(sym==rparent)//右括号
-        {
-            sym=nextsym();
-            if(sym==lbrace)//左花括号
-            {
-                sym=nextsym();
-                statements();//复合语句
-                if(sym==rbrace)//右花括号
-                {
-                    fprintf(OUT,"Mainfunc end\n");
-                    tncount[symloca]=exprt-1;
-                    return;
-                }
-            }
-        }
+    else
+        printerror(9);
+    if(sym==rparent)//右括号
+        sym=nextsym();
+    else
+        printerror(10);
+    if(sym==lbrace)//左花括号
+        sym=nextsym();
+    else
+        printerror(13);
+    statements();//复合语句
+    if(sym==rbrace)//右花括号
+    {
+        fprintf(OUT,"Mainfunc end\n");
+        tncount[symloca]=exprt-1;
+        return;
     }
 }
 
@@ -744,8 +743,6 @@ int statements()
     //语句
     statement();
     fprintf(OUT,"Statements end\n");
-    if(sym==rbrace) return;
-    else printf("mainerror\n");
     return;
 }
 
@@ -753,7 +750,7 @@ int statements()
             ｜＜有返回值函数调用语句＞; |＜无返回值函数调用语句＞;
             ｜＜赋值语句＞;｜＜读语句＞;｜＜写语句＞;｜＜空＞;
             |＜情况语句＞｜＜返回语句＞*/
-int statement()
+int statement()//返回右花括号
 {
     while(!feof(IN)){
         switch(sym)
@@ -764,21 +761,19 @@ int statement()
                 sym=nextsym();
                 if(sym==rbrace)//右花括号
                     return;
+                else if(sym==intsym||sym==charsym||sym==voidsym)
+                    return;
                 else continue;
             case ifsym:
                 ifstatement();
                 continue;
-            case elsesym:
-                return;
             case whilesym:
                 whilestatement();
                 continue;
             case switchsym:
                 switchstatement();
+                //sym=nextsym();
                 continue;
-            case casesym:
-            case defaultsym:
-                return;
             case scanfsym:
                 readstatement();
                 continue;
@@ -790,29 +785,40 @@ int statement()
                 continue;
             case lbrace:
                 sym=nextsym();
-                if(sym==semicolon) continue;
+                if(sym==semicolon)//{;}
+                {
+                    sym=nextsym();
+                    if(sym==rbrace)
+                        return;
+                }
                 statement();
                 if(sym==rbrace){
                     fprintf(OUT,"statement end\n");
                     return;
                 }
-                else printf("errorlbrace\n");break;
+                else if(sym==intsym||sym==charsym||sym==voidsym)
+                    return;
+                else
+                    continue;
             case identsym:
             case chartype:
 				logflag=checkiflog();
                 if(logflag==-1){//不在符号表中{
-                    printf("%s UNDEFINED IDENT\n",token);
+                    printerror(2);
+                    fprintf(ERROR," %s",token);
                 }
                 sym=nextsym();
                 if(sym==lparent||sym==semicolon)//左括号或分号，为函数调用语句
                 {
                     if(logflag==2)
-                        voidfuncuse();//返回了右括号
+                        voidfuncuse();//返回了分号或右括号
                     else if(logflag==3)
-                        retfuncuse();//返回了右括号
-                    sym=nextsym();
-                    if(sym==semicolon)//分号
-                        continue;
+                        retfuncuse();//返回了分号或右括号
+                    if(sym==rparent)
+                        sym=nextsym();
+                    if(sym!=semicolon)//分号
+                        printerror(15);
+                    continue;
                 }
                 else if(sym==equmark||sym==lbracket)//等号或左方括号，为赋值语句
                 {
@@ -820,9 +826,19 @@ int statement()
                     continue;
                 }
                 else
-                    printf("statementerror\n");
+                    printerror(1);
                     continue;
+            case intsym:
+            case charsym:
+            case voidsym:
+                return;
+            case elsesym:
+            case casesym:
+            case defaultsym:
+                printerror(14);
+                return;
             default:
+                sym=nextsym();
                 continue;
         }
     }
@@ -851,27 +867,31 @@ int onestatement()//返回分号
         case chartype:
             logflag=checkiflog();
             if(logflag==-1){//不在符号表中{
-                printf("%s UNDEFINED IDENT\n",token);
+                printerror(2);
+                fprintf(ERROR," %s",token);
             }
             sym=nextsym();
             if(sym==lparent||sym==semicolon)//左括号或分号，为函数调用语句
             {
                 if(logflag==2)
-                    voidfuncuse();//返回了右括号
+                    voidfuncuse();//返回了分号或右括号
                 else if(logflag==3)
-                    retfuncuse();//返回了右括号
-                sym=nextsym();
-                if(sym==semicolon)//分号
-                    return;
+                    retfuncuse();//返回了分号或右括号
+                if(sym==rparent)
+                    sym=nextsym();
+                if(sym!=semicolon)//分号
+                    printerror(15);
+                return;
             }
             else if(sym==equmark||sym==lbracket)//等号或左方括号，为赋值语句
             {
                 assignstatement();
-                if(sym!=semicolon) printf("one assign error\n");
+                if(sym!=semicolon)
+                    printerror(15);
                 return;
             }
             else
-                printf("onestatementerror\n");
+                printerror(1);
                 return;
         default:
             return;
@@ -893,19 +913,19 @@ int assignstatement() //赋值语句
         strcpy(assarrnum,exprret);
         {
             if(sym==rbracket)//右方括号
-            {
                 sym=nextsym();
-                if(sym==equmark)//等号
-                {
-					sym=nextsym();
-                    expression();//表达式
-                    strcpy(intercode[++interpc].inter0,"arrass");
-                    strcpy(intercode[interpc].inter1,exprret);
-                    strcpy(intercode[interpc].inter2,assarrnum);
-                    strcpy(intercode[interpc].inter3,assignident);
-                    return;
-                }
-            }
+            else
+                printerror(12);
+            if(sym==equmark)//等号
+                sym=nextsym();
+            else
+                printerror(16);
+            expression();//表达式
+            strcpy(intercode[++interpc].inter0,"arrass");
+            strcpy(intercode[interpc].inter1,exprret);
+            strcpy(intercode[interpc].inter2,assarrnum);
+            strcpy(intercode[interpc].inter3,assignident);
+            return;
         }
     }
     else if(sym==equmark)//等号
@@ -917,6 +937,8 @@ int assignstatement() //赋值语句
         strcpy(intercode[interpc].inter3,assignident);
         return;
     }
+    else
+        printerror(1);
     return;
 }
 
@@ -928,11 +950,12 @@ int ifstatement() //情况语句
     fprintf(OUT,"If statement begin:\n");
     //sym此时为if
     sym=nextsym();
-    if(sym==lparent)//左括号
-    {
+    if(sym!=lparent)//左括号
+        printerror(9);
         itoa(condition(),elselabel,10);//条件
-        if(sym==rparent)//右括号
-        {
+        if(sym!=rparent)//右括号
+            printerror(10);
+        else
             sym=nextsym();
             if(sym==semicolon)
                 sym=nextsym();//语句为空
@@ -947,10 +970,11 @@ int ifstatement() //情况语句
             strcat(intercode[interpc].inter1,labtemp);
             if(sym==rbrace||sym==semicolon)
                 sym=nextsym();
-            if(sym==elsesym)//else
-            {
-                fprintf(OUT,"Else statement:\n");
+            if(sym!=elsesym)//else
+                printerror(1);
+            else
                 sym=nextsym();
+                fprintf(OUT,"Else statement:\n");
                 strcpy(intercode[++interpc].inter0,"Label");
                 strcat(intercode[interpc].inter0,elselabel);
                 strcpy(intercode[interpc].inter1,":");
@@ -961,16 +985,22 @@ int ifstatement() //情况语句
                     strcpy(intercode[interpc].inter1,":");
                     return;//返回分号后的符号
                 }
+                else if(sym==ifsym){//else if
+                    strcpy(intercode[++interpc].inter0,"Label");
+                    strcat(intercode[interpc].inter0,iflabel);
+                    strcpy(intercode[interpc].inter1,":");
+                    return;
+                }
                 else if(sym==lbrace){
                     statement();//语句
                     strcpy(intercode[++interpc].inter0,"Label");
                     strcat(intercode[interpc].inter0,iflabel);
                     strcpy(intercode[interpc].inter1,":");
-                    if(sym==rbrace){
+                    if(sym==rbrace)
                         sym=nextsym();
-                        return;
-                    }
-                    else printf("iferror\n");
+                    else
+                        printerror(14);
+                    return;
                 }
                 else{
                     onestatement();
@@ -979,12 +1009,10 @@ int ifstatement() //情况语句
                     strcpy(intercode[interpc].inter1,":");
                     if(sym==semicolon)
                         sym=nextsym();
+                    else
+                        printerror(15);
                     return;
                 }
-            }
-        }
-    }
-    printf("iferror\n");
 }
 
 /*＜条件＞ ::=  ＜表达式＞＜关系运算符＞＜表达式＞｜＜表达式＞*/
@@ -1033,16 +1061,16 @@ int whilestatement() //循环语句
     fprintf(OUT,"While statement begin:\n");
     //sym此时为while
     sym=nextsym();
-    if(sym==lparent)//左括号
-    {
+    if(sym!=lparent)//左括号
+        printerror(9);
         itoa(labelt++,beginlabel,10);
         strcpy(intercode[++interpc].inter0,"Label");
         strcat(intercode[interpc].inter0,beginlabel);
         strcpy(intercode[interpc].inter1,":");
         itoa(condition(),endlabel,10);//条件
-        if(sym==rparent)//右括号
-        {
-
+        if(sym!=rparent)//右括号
+            printerror(10);
+        else
             sym=nextsym();//分号或左花括号
             if(sym==semicolon){//语句为空
                 //sym=nextsym();
@@ -1064,10 +1092,11 @@ int whilestatement() //循环语句
                 strcpy(intercode[++interpc].inter0,"Label");
                 strcat(intercode[interpc].inter0,endlabel);
                 strcpy(intercode[interpc].inter1,":");
-                if(sym==rbrace){
+                if(sym==rbrace)
                     sym=nextsym();
-                    return;
-                }
+                else
+                    printerror(14);
+                return;
             }
             else{
                 onestatement();
@@ -1080,11 +1109,10 @@ int whilestatement() //循环语句
                 strcpy(intercode[interpc].inter1,":");
                 if(sym==semicolon)
                     sym=nextsym();
+                else
+                    printerror(15);
                 return;
             }
-            printf("whileerror\n");
-        }
-    }
 }
 
 /*＜情况语句＞ ::= switch ‘(’＜表达式＞‘)’ ‘{’＜情况表＞[＜缺省＞] ‘}’*/
@@ -1095,30 +1123,28 @@ int switchstatement() //情况语句
     //sym此时为switch
     sym=nextsym();
     {
-        if(sym==lparent)//左括号
-        {
-			sym=nextsym();
+        if(sym!=lparent)//左括号
+            printerror(9);
+        else
+            sym=nextsym();
             expression();
             strcpy(switchlabel,exprret);
-            if(sym==rparent)//右括号
-            {
+            if(sym!=rparent)//右括号
+                printerror(10);
+            else
                 sym=nextsym();
-                if(sym==lbrace)//左花括号
-                {
+                if(sym!=lbrace)//左花括号
+                    printerror(13);
+                else
                     sym=nextsym();
                     if(sym==casesym){//case
                         casestatement(switchlabel);
-                        if(sym==rbrace)//右花括号
-                        {
-                            sym=nextsym();
-                            return;
-                        }
+                        if(sym!=rbrace)//右花括号
+                            printerror(14);
                         else
-                            printf("switcherror\n");
+                            sym=nextsym();
+                        return;
                     }
-                }
-            }
-        }
     }
 }
 
@@ -1132,6 +1158,19 @@ int casestatement(char *switchlabel) //情况子语句
     itoa(endofcase++,endlabel,10);
     while(1)
     {
+        if(sym==defaultsym){//default
+            defaultstatement();
+            strcpy(intercode[++interpc].inter0,"Labeleoc");
+            strcat(intercode[interpc].inter0,endlabel);
+            strcpy(intercode[interpc].inter1,":");
+            return;
+        }
+        else if (sym==rbrace){//右花括号
+            strcpy(intercode[++interpc].inter0,"Labeleoc");
+            strcat(intercode[interpc].inter0,endlabel);
+            strcpy(intercode[interpc].inter1,":");
+            return;
+        }
         strcpy(intercode[++interpc].inter0,"==");
         strcpy(intercode[interpc].inter1,switchlabel);
         upperflag=1;
@@ -1142,6 +1181,12 @@ int casestatement(char *switchlabel) //情况子语句
             constflag=constant();
             if(constflag>0){//常量
                 fprintf(OUT,"Case statement\n");
+            }
+            else{
+                printerror(1);
+                while(sym!=casesym&&sym!=defaultsym&&sym!=lbrace)
+                    sym=nextsym();
+                continue;
             }
             if(constflag==2){//char
                 itoa((int)ident[0],ident,10);
@@ -1157,10 +1202,12 @@ int casestatement(char *switchlabel) //情况子语句
             itoa(labelt++,caselabel,10);
             strcpy(intercode[interpc].inter1,"Label");
             strcat(intercode[interpc].inter1,caselabel);
-            sym=nextsym();
-            if(sym==colon)//冒号
-            {
+            if(sym!=colon)
                 sym=nextsym();
+            if(sym==colon)//冒号
+                sym=nextsym();
+            else
+                printerror(19);
                 if(sym==semicolon){//语句为空
                     sym=nextsym();//可能返回右花括号、case、default
                 }
@@ -1197,7 +1244,12 @@ int casestatement(char *switchlabel) //情况子语句
                     strcpy(intercode[interpc].inter1,":");
                     return;
                 }
-            }
+        }
+        else{
+            printerror(1);
+            while(sym!=casesym&&sym!=defaultsym&&sym!=rbrace)
+                sym=nextsym();
+            continue;
         }
     }
 }
@@ -1210,8 +1262,9 @@ int defaultstatement() //缺省
     sym=nextsym();
     {
         if(sym==colon)//冒号
-        {
             sym=nextsym();
+        else
+            printerror(19);
             if(sym==semicolon)//语句为空
                 sym=nextsym();//返回右花括号
             else if(sym==lbrace){
@@ -1222,7 +1275,6 @@ int defaultstatement() //缺省
                 onestatement();
                 sym=nextsym();//返回switch的右花括号
             }
-        }
     }
     return;
 }
@@ -1234,23 +1286,23 @@ int retfuncuse() //有返回值函数调用语句
     fprintf(OUT,"Return funcuse\n");
     //sym此时为左括号或分号
     strcpy(funcname,ident);
-    if(sym==semicolon){
+    if(sym==semicolon){//无参数，返回分号
         strcpy(intercode[++interpc].inter0,"call");
         strcpy(intercode[interpc].inter1,funcname);
         return;
     }
-    else if(sym==lparent)
+    else if(sym==lparent)//有参数，返回右括号或左花括号
     {
         sym=nextsym();
         valuepara();//值参数表
-        if(sym==rparent)//右括号
-        {
-            strcpy(intercode[++interpc].inter0,"call");
-            strcpy(intercode[interpc].inter1,funcname);
-            return;
-        }
+        strcpy(intercode[++interpc].inter0,"call");
+        strcpy(intercode[interpc].inter1,funcname);
+        return;
     }
-    printf("retfuncuseerror\n");
+    else{
+        //printerror(1);
+        return;
+    }
 }
 
 /*＜无返回值函数调用语句＞ ::= ＜标识符＞‘(’＜值参数表＞‘)’|<标识符>*/
@@ -1259,30 +1311,30 @@ int voidfuncuse() //无返回值函数调用语句
     char funcname[MAXIDENTLEN];
     fprintf(OUT,"Void funcuse\n");
     strcpy(funcname,ident);
-    if(sym==semicolon){
+    if(sym==semicolon){//无参数，返回分号
         strcpy(intercode[++interpc].inter0,"call");
         strcpy(intercode[interpc].inter1,funcname);
         return;
     }
-    else if(sym==lparent)
+    else if(sym==lparent)//有参数，返回右括号或左花括号
     {
         sym=nextsym();
         valuepara();//值参数表
-        if(sym==rparent)//右括号
-        {
-            strcpy(intercode[++interpc].inter0,"call");
-            strcpy(intercode[interpc].inter1,funcname);
-            return;
-        }
+        strcpy(intercode[++interpc].inter0,"call");
+        strcpy(intercode[interpc].inter1,funcname);
+        return;
     }
-    printf("voidfuncuseerror\n");
+    else{
+        printerror(1);
+        return;
+    }
 }
 
 /*＜值参数表＞   ::= ＜表达式＞{,＜表达式＞}*/
 int valuepara() //值参数表
 {
     fprintf(OUT,"\tValue Parameters\n");
-    while(sym!=rparent)
+    while(1)
     {
         expression();
         strcpy(intercode[++interpc].inter0,"push");
@@ -1292,8 +1344,14 @@ int valuepara() //值参数表
              sym=nextsym();
              continue;
         }
+        else if(sym==rparent)
+            return;
+        else if(sym==lbrace)
+        {
+            printerror(10);
+            return;
+        }
     }
-    return;//返回时sym为右括号
 }
 
 /*＜读语句＞ ::=  scanf ‘(’＜标识符＞{,＜标识符＞}‘)’*/
@@ -1302,28 +1360,51 @@ int readstatement() //读语句
     fprintf(OUT,"Read statement\n");
     //sym此时为scanf
     sym=nextsym();
-    if(sym==lparent)//左括号
-    {
+    if(sym!=lparent)//左括号
+        printerror(9);
+    else
+        sym=nextsym();
         while(1)
         {
-            sym=nextsym();
             if(sym==identsym||sym==chartype)//标识符
             {
 				logflag=checkiflog();
-                if(logflag==-1)//不在符号表中
-                    printf("%s UNDEFINED IDENT\n",token);
+                if(logflag==-1){//不在符号表中
+                    printerror(2);
+                    fprintf(ERROR," %s",token);
+                }
                 strcpy(intercode[++interpc].inter0,"scan");
                 strcpy(intercode[interpc].inter1,ident);
                 sym=nextsym();
-                if(sym==comma)//下一个标识符
+                if(sym==comma){//下一个标识符
+                    sym=nextsym();
                     continue;
-                else{//右括号
+                }
+                else if(sym==rparent){//右括号
                     sym=nextsym();//分号
+                    if(sym!=semicolon)
+                        printerror(15);
+                    return;
+                }
+                else{
+                    printerror(1);
                     return;
                 }
             }
+            else{
+                printerror(1);
+                while(sym!=identsym&&sym!=chartype&&sym!=rparent)
+                    sym=nextsym();
+                if(sym==rparent){
+                    sym=nextsym();//分号
+                    if(sym!=semicolon)
+                        printerror(15);
+                    return;
+                }
+                else
+                    continue;
+            }
         }
-    }
 }
 
 /*＜写语句＞ ::= printf ‘(’ ＜字符串＞,＜表达式＞ ‘)’
@@ -1333,8 +1414,9 @@ int writestatement() //写语句
     fprintf(OUT,"Write statement\n");
     //sym此时为printf
     sym=nextsym();
-    if(sym==lparent)//左括号
-    {
+    if(sym!=lparent)//左括号
+        printerror(9);
+    else
         sym=nextsym();
         if(sym==douquo)//双引号，字符串
         {
@@ -1353,12 +1435,20 @@ int writestatement() //写语句
                 if(sym==rparent)//右括号
                 {
                     sym=nextsym();//分号
+                    if(sym!=semicolon)
+                        printerror(15);
                     return;
                 }
             }
             else if(sym==rparent)//右括号
             {
                 sym=nextsym();//分号
+                if(sym!=semicolon)
+                    printerror(15);
+                return;
+            }
+            else{
+                printerror(1);
                 return;
             }
         }
@@ -1370,10 +1460,15 @@ int writestatement() //写语句
             if(sym==rparent)//右括号
             {
                 sym=nextsym();//分号
+                if(sym!=semicolon)
+                    printerror(15);
+                return;
+            }
+            else{
+                printerror(1);
                 return;
             }
         }
-    }
 }
 
 /*＜返回语句＞ ::=  return[‘(’＜表达式＞‘)’] */
@@ -1390,10 +1485,16 @@ int returnstatement() //返回语句
         strcpy(intercode[interpc].inter1,exprret);
         if(sym==rparent){//右括号
             sym=nextsym();//分号
-        return;
+            if(sym!=semicolon)
+                printerror(15);
+            return;
+        }
+        else{
+            printerror(1);
+            return;
         }
     }
-    else{//分号
+    else if(sym==semicolon){//分号
         //main函数的return
         if(retmainflag==1){
          strcpy(intercode[++interpc].inter0,"goto");
@@ -1403,6 +1504,12 @@ int returnstatement() //返回语句
             strcpy(intercode[++interpc].inter0,"ret");
             strcpy(intercode[interpc].inter1,"none");
         }
+        return;
+    }
+    else{
+        printerror(1);
+        while(sym!=semicolon)
+            sym=nextsym();
         return;
     }
 }
@@ -1422,8 +1529,9 @@ int constant()
             if(sym==sinquo)//单引号
                 return 2;
             else{
-                printf("constanterror\n");
-                return 0;
+                printerror(7);
+                if(sym==colon) return 2;
+                else return 0;
             }
         }
         else{
@@ -1456,16 +1564,19 @@ int strings()
     fprintf(OUT,"\tString\n");
     //sym此时为双引号
     sym=nextsym();
-    while(sym!=douquo)
+    while(sym!=douquo&&sym!=-1)
     {
         if(sym>=constsym&&sym<=underline){
             strcat(strret,token);
             sym=nextsym();
         }
-        else
-            return;
+        else{
+            break;
+        }
     }
     blankflag=0;
+    if(sym!=douquo)
+        printerror(8);
     return;//返回了双引号
 }
 
@@ -1628,7 +1739,6 @@ int term() //项
                 else if(itepc==2) itepc=1;
             }
             strcpy(ite[0],token);
-
             sym=nextsym();
             continue;
         }
@@ -1676,16 +1786,20 @@ int factor() //因子
         case identsym:
         case chartype:
             logflag=checkiflog();
-            if(logflag==-1)//不在符号表中
-                printf("%s UNDEFINED IDENT\n",token);
+            if(logflag==-1){//不在符号表中
+                printerror(2);
+                fprintf(ERROR," %s",token);
+            }
             strcpy(factident,ident);
             sym=nextsym();
             if(sym==lbracket){//左方括号，数组
                 sym=nextsym();
                 expression();
                 strcpy(factarray,exprret);//数组系数
-                if(sym==rbracket){//右方括号
+                if(sym==rbracket)//右方括号
                     sym=nextsym();
+                else
+                    printerror(12);
                     strcpy(intercode[++interpc].inter0,"arrget");
                     strcpy(intercode[interpc].inter1,factident);
                     strcpy(intercode[interpc].inter2,factarray);
@@ -1701,11 +1815,12 @@ int factor() //因子
                     strcat(intercode[interpc].inter3,exprtemp);
                     strcpy(factret,intercode[interpc].inter3);
                     return;
-                }
             }
             else if(sym==lparent)//左括号，有返回值函数调用
             {
                 retfuncuse();//返回右括号
+                if(sym!=rparent)
+                    printerror(10);
                 sym=nextsym();
                 strcpy(factret,"ret");
                 return;//
@@ -1713,7 +1828,7 @@ int factor() //因子
             else{//标识符
                 if(logflag==3)//有返回值函数调用
                 {
-                    retfuncuse();//返回分号
+                    retfuncuse();
                     strcpy(factret,"ret");
                     return;
                 }
@@ -1721,34 +1836,34 @@ int factor() //因子
                     strcpy(factret,ident);
                 return;
             }
-            break;
         case lparent://表达式
             sym=nextsym();
             expression();
             strcpy(factret,exprret);
-            if(sym==rparent){//右括号
+            if(sym==rparent)//右括号
                 sym=nextsym();
-                return;
-            }
-            break;
-
+            else
+                printerror(10);
+            return;
         case add://整数前正负号
             sym=nextsym();
             if(sym==inttype||sym==numtype){
                 sym=nextsym();
                 strcpy(factret,ident);
-                return;
             }
-            break;
+            else
+                printerror(1);
+            return;
         case sub:
             sym=nextsym();
             if(sym==inttype||sym==numtype){
                 sym=nextsym();
                 strcpy(factret,"-");
                 strcat(factret,ident);
-                return;
             }
-            break;
+            else
+                printerror(1);
+            return;
         case inttype:
         case numtype://无符号整数
             sym=nextsym();
@@ -1762,14 +1877,16 @@ int factor() //因子
                 itoa((int)token[0],ident,10);
                 strcpy(factret,ident);
                 sym=nextsym();
-                if(sym==sinquo){//单引号
+                if(sym==sinquo)//单引号
                     sym=nextsym();
-                    return;
-                }
+                else
+                    printerror(7);
             }
-            break;
+            else
+                printerror(1);
+            return;
     }
-    printf("factor error\n");
+    printerror(1);
 }
 
 //读下一个字符
@@ -2694,7 +2811,8 @@ int main()
         saveerror();
         while(!feof(IN))
         {
-            sym=nextsym();
+            if(sym!=intsym&&sym!=charsym&&sym!=voidsym)
+                sym=nextsym();
             if(sym==constsym)
                 constdec();
             if(sym==intsym||sym==charsym){//类型标识符
@@ -2704,8 +2822,10 @@ int main()
             if(sym==voidsym)
             {
                 sym=nextsym();
-                if(sym!=mainsym)//无返回值函数
+                if(sym!=mainsym){//无返回值函数
                     voidfuncdef();
+
+                }
                 else //主函数
                     mainfunc();
             }
