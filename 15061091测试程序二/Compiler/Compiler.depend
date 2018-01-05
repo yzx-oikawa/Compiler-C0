@@ -1,0 +1,11 @@
+# depslib dependency file v1.0
+1514991751 source:d:\program files\codeblocks\compiler\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<ctype.h>
+
+1512792075 source:d:\program files\codeblocks\compiler\untitled1.c
+	"string.h"
+	"stdio.h"
+
