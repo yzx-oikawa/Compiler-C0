@@ -1,327 +1,168 @@
 0	1	2	3
-const	int	stepmask	1
-const	char	plus	+
-const	char	times	*
-const	char	minus	-
-const	char	div	/
-const	char	udl	_
-var	int	list	10
-var	char	op	
-func	int	fact	
+const	int	one	1
+const	int	two	2
+const	char	ch	c
+const	char	st	s
+var	int	s	
+var	int	sum	
+func	void	getsum	
 para	int	n	
-==	n	0	
+>	n	100	
 bz	Label1		
-/	minus	1000	t1
--	t1	1	t2
-*	div	t2	t3
-+	t3	plus	t4
--	t4	times	t5
-/	-1	times	t6
--	t5	t6	t7
-assign	1	-	t8
-+	t8	2	t9
-*	47	t9	t10
-+	t7	t10	t11
-ret	t11		
 goto	Label2		
 Label1	:		
--	n	1	t12
-push	t12		
-call	fact		
-assign	ret		t13
-*	n	t13	t14
-ret	t14		
-Label2	:		
-func	int	isletter	
-para	char	c1	
-==	c1	95	
+<=	s	n	
 bz	Label3		
-ret	1		
++	sum	s	t1
+assign	t1		sum
++	s	1	t2
+assign	t2		s
+push	n		
+call	getsum		
 goto	Label4		
 Label3	:		
+print		sum	
 Label4	:		
->=	c1	97	
-bz	Label5		
-<=	c1	122	
-bz	Label6		
-ret	1		
-goto	Label7		
-Label6	:		
-ret	0		
-Label7	:		
-goto	Label8		
-Label5	:		
-Label8	:		
->=	c1	65	
-bz	Label9		
-<=	c1	90	
-bz	Label10		
-ret	1		
-goto	Label11		
-Label10	:		
-Label11	:		
-goto	Label12		
-Label9	:		
-Label12	:		
-ret	0		
-func	int	choose_pivot	
-para	int	i	
-para	int	j	
-+	i	j	t1
-/	t1	2	t2
-ret	t2		
-func	void	printlist	
-para	int	n	
-var	int	i	
-assign	0		i
-Label13	:		
-<	i	n	
-bz	Label14		
-print	 		
-arrget	list	i	t1
-print		t1	
-+	i	1	t2
-assign	t2		i
-goto	Label13		
-Label14	:		
+Label2	:		
 ret	none		
-func	void	quicksort	
-para	int	m	
+ret	none		
+func	int	reverse	
 para	int	n	
-var	int	key	
+var	int	j	
+var	int	na	100
+assign	0		j
+>	n	100	
+bz	Label5		
+assign	1	-	t1
+ret	t1		
+goto	Label6		
+Label5	:		
+Label6	:		
+Label7	:		
+<	j	n	
+bz	Label8		
+-	n	1	t2
+-	t2	j	t3
++	j	1	t4
+arrass	t4	t3	na
++	j	1	t5
+assign	t5		j
+goto	Label7		
+Label8	:		
+print	SUM: 		
+arrget	na	0	t6
+print		t6	
+assign	1		j
+Label9	:		
+<	j	n	
+bz	Label10		
+print	+		
+arrget	na	j	t7
+print		t7	
++	j	1	t8
+assign	t8		j
+goto	Label9		
+Label10	:		
+print	=		
+/	n	2	t9
+*	t9	2	t10
+==	t10	n	
+bz	Label11		
+ret	1		
+goto	Label12		
+Label11	:		
+ret	0		
+Label12	:		
+func	void	main	
 var	int	x	
 var	int	y	
-var	int	z	
-var	int	tmp	
-push	m		
-push	n		
-call	choose_pivot		
-assign	ret		t1
-arrget	list	t1	t2
-assign	t2		key
-assign	m		x
-assign	n		y
+var	int	n	
+var	int	m	
+var	int	i	
+var	int	a	
+var	char	c	
+var	char	r	
+assign	1		s
+assign	0		sum
++	one	1	t1
+print		t1	
++	ch	1	t2
+print		t2	
+scan	x		
+scan	y		
+scan	c		
+assign	x		m
+assign	2		a
+assign	1		i
+<	x	y	
+bz	Label13		
+assign	y		x
+assign	m		y
+goto	Label14		
+Label13	:		
+Label14	:		
 Label15	:		
-<=	x	y	
+<=	i	y	
 bz	Label16		
-Label17	:		
-arrget	list	y	t3
-<	key	t3	
+/	x	i	t3
+*	t3	i	t4
+==	t4	x	
+bz	Label17		
+/	y	i	t5
+*	t5	i	t6
+==	t6	y	
 bz	Label18		
--	y	1	t4
-assign	t4		y
-goto	Label17		
+assign	i		a
+goto	Label19		
 Label18	:		
 Label19	:		
-arrget	list	x	t5
->	key	t5	
-bz	Label20		
-+	x	1	t6
-assign	t6		x
-goto	Label19		
+goto	Label20		
+Label17	:		
 Label20	:		
-<=	x	y	
-bz	Label21		
-arrget	list	x	t7
-assign	t7		tmp
-arrget	list	y	t8
-arrass	t8	x	list
-arrass	tmp	y	list
-+	x	1	t9
-assign	t9		x
--	y	1	t10
-assign	t10		y
-goto	Label22		
-Label21	:		
-Label22	:		
++	i	1	t7
+assign	t7		i
 goto	Label15		
 Label16	:		
-<	x	n	
-bz	Label23		
-push	x		
-push	n		
-call	quicksort		
-goto	Label24		
-Label23	:		
-Label24	:		
-<	m	y	
-bz	Label25		
-push	m		
-push	y		
-call	quicksort		
-goto	Label26		
-Label25	:		
-Label26	:		
-ret	none		
-func	void	exprcheck	
-var	int	a	
-var	int	b	
-var	int	res	
-var	int	flag	
-scan	a		
-scan	op		
-scan	b		
+*	x	y	t8
+/	t8	a	t9
+assign	t9		m
+==	c	103	
+bz	Label21		
+print	GCD: 		
 print		a	
-print		op	
-print		b	
-print	=		
-assign	1		flag
-==	op	43	
-bz	Label27		
-+	a	b	t1
-assign	t1		res
-print		res	
-assign	0		flag
 goto	Labeleoc1		
-Label27	:		
-==	op	45	
-bz	Label28		
--	a	b	t2
-assign	t2		res
-print		res	
-assign	0		flag
+Label21	:		
+==	c	108	
+bz	Label22		
+print	LCM: 		
+print		m	
 goto	Labeleoc1		
-Label28	:		
-==	op	42	
-bz	Label29		
-*	a	b	t3
-assign	t3		res
-print		res	
-assign	0		flag
-goto	Labeleoc1		
-Label29	:		
-==	op	47	
-bz	Label30		
-assign	0		flag
-==	b	0	
-bz	Label31		
-print	ERROR:Divided by ZERO. 		
-goto	Label32		
-Label31	:		
-/	a	b	t4
-assign	t4		res
-print		res	
-Label32	:		
-goto	Labeleoc1		
-Label30	:		
+Label22	:		
+print	ERROR		
 Labeleoc1	:		
->	flag	0	
-bz	Label33		
-print	Undefined operation:		
-print		op	
-print	Please select one from set {+,-,*,/}. 		
-goto	Label34		
-Label33	:		
-Label34	:		
-ret	none		
-func	void	arraychek	
-const	int	a	10
-var	int	i	
-assign	0		i
-Label35	:		
-<	i	10	
-bz	Label36		
--	10	i	t1
-arrass	t1	i	list
-+	i	1	t2
-assign	t2		i
-goto	Label35		
-Label36	:		
-arrass	16	1	list
-arrass	3	2	list
-assign	8	-	t3
-arrass	t3	3	list
-arrass	40	4	list
-assign	1	-	t4
-arrass	t4	5	list
-arrass	2	6	list
-assign	10	-	t5
-arrass	t5	7	list
-assign	1		i
-push	0		
-push	1		
-push	1		
-call	choose_pivot		
-assign	ret		t6
--	t6	i	t7
-push	t7		
-call	choose_pivot		
-assign	ret		t8
-push	t8		
-push	9		
-push	9		
-call	choose_pivot		
-assign	ret		t9
-push	t9		
-call	quicksort		
-push	10		
-call	printlist		
-ret	none		
-func	void	recurcheck	
-var	int	i	
-scan	i		
-Label37	:		
-<=	13	i	
-bz	Label38		
-print	Please input a smaller one:		
-scan	i		
-goto	Label37		
-Label38	:		
-push	i		
-call	fact		
-assign	ret		t1
-print		t1	
-ret	none		
-func	void	lettercheck	
-var	char	x	
-scan	x		
-push	x		
-call	isletter		
-assign	ret		t1
->	t1	0	
-bz	Label39		
-print	True		
-goto	Label40		
-Label39	:		
-print	False		
-Label40	:		
-ret	none		
-func	void	main	
-var	int	choice	
-scan	choice		
-Label41	:		
-!=	choice	0	
-bz	Label42		
-/	0	5	t1
-+	choice	t1	t2
-*	t2	4	t3
-/	t3	4	t4
-+	t4	19	t5
--	t5	19	t6
-==	t6	1	
-bz	Label43		
-call	exprcheck		
+scan	n		
+push	n		
+call	reverse		
+assign	ret		t10
+assign	t10		r
+push	n		
+call	getsum		
+==	r	0	
+bz	Label23		
+print	n is ODD		
 goto	Labeleoc2		
-Label43	:		
-==	t6	2	
-bz	Label44		
-call	arraychek		
+Label23	:		
+==	r	1	
+bz	Label24		
+print	n is EVEN		
 goto	Labeleoc2		
-Label44	:		
-==	t6	3	
-bz	Label45		
-call	recurcheck		
-goto	Labeleoc2		
-Label45	:		
-==	t6	4	
-bz	Label46		
-call	lettercheck		
-goto	Labeleoc2		
-Label46	:		
-print	Wrong number:		
-print		choice	
+Label24	:		
+print	ERROR		
 Labeleoc2	:		
-print	    		
-scan	choice		
-goto	Label41		
-Label42	:		
+assign	1	-	t11
+print		t11	
+-	x	y	t12
+assign	t12	-	t13
+print		t13	
+assign	m	-	t14
+print		t14	
