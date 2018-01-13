@@ -92,7 +92,46 @@ int parapc;
 char errtype[MAXERRORLEN][MAXERRORLEN];//错误信息
 int linecount=1;//行数
 
-FILE *IN, *OUT, *INTER, *ASSEM, *ERROR;
+/*用于优化的中间节点结构*/
+struct midnodes{
+    char op  [10];
+    int node; //父节点号
+    int lnode;//左子节点号
+    int rnode;//右子节点号
+    int queue;//是否进入队列 1-进入 0-未进入
+};
+struct midnodes midnode[MAXINTERCODE];
+int midpc=0;        //中间节点序列指针
+int midi,midj,midk; //用来遍历中间节点序列的参数
+
+/*用于优化的节点表结构*/
+struct nodelists{
+    char id [MAXIDENTLEN]; //变量名
+    int node;              //节点号
+};
+struct nodelists nodelist[MAXINTERCODE];
+int listpc=0;//中间节点序列指针
+int listi,listj;   //用来遍历中间节点序列的参数
+
+char firstid[MAXIDENTLEN];
+
+/*优化后的四元式结构*/
+struct newintercodes{
+    char inter0[MAXINTERCODE];
+    char inter1[MAXINTERCODE];
+    char inter2[MAXINTERCODE];
+    char inter3[MAXINTERCODE];
+};
+struct newintercodes newinter[MAXINTERCODE];
+int newpc=0;//优化后的四元式序列指针
+int newi;   //用来遍历优化后的四元式序列的参数
+
+/*中间节点队列*/
+int nodequeue[MAXINTERCODE];
+int queuepc=0;//中间节点队列指针
+int queuei;   //用来遍历中间节点队列的参数
+
+FILE *IN, *OUT, *INTER, *ASSEM, *ERROR, *NEWINTER;
 
 int blankflag=0; //0-跳过空格 1-不跳过空格
 int upperflag=0; //0-大写转换为小写 1-输入为字符和常量时区分大小写
@@ -153,48 +192,289 @@ int tncheckiflog();//回头争取重新写一下
 void inter2assem();//四元式转汇编
 void saveerror();//保存错误信息
 void printerror();//打印错误信息
+void partition();//划分基本块并生成DAG图
+void optimize();//从DAG图导出中间代码
+int leftest();//递归访问最左子节点
+void getfirstid();//如果有非tn，就输出第一个，如果没有就输出第一个tn
 
-void saveerror()//保存错误信息
+void getfirstid(int nod)
 {
-    strcpy(errtype[0],"FILE NOT EXIST");
-    strcpy(errtype[1],"ILLEGAL SYM");
-    strcpy(errtype[2],"UNDEFINED IDENT");
-    strcpy(errtype[3],"DUPLICATE DEFINE");
-    strcpy(errtype[4],"WRONG ASSIGN TYPE");
-    strcpy(errtype[5],"WRONG PARA NUMBER");
-    strcpy(errtype[6],"WRONG PARA TYPE");
-    strcpy(errtype[7],"LACK SINGLE QUOTES");
-    strcpy(errtype[8],"LACK DOUBLE QUOTES");
-    strcpy(errtype[9],"LACK LEFT PARENT");
-    strcpy(errtype[10],"LACK RIGHT PARENT");
-    strcpy(errtype[11],"LACK LEFT BRACKET");
-    strcpy(errtype[12],"LACK RIGHT BRACKET");
-    strcpy(errtype[13],"LACK LEFT BRACE");
-    strcpy(errtype[14],"LACK RIGHT BRACE");
-    strcpy(errtype[15],"LACK SEMICOLON");
-    strcpy(errtype[16],"LACK EQUALMARK");
-    strcpy(errtype[17],"LACK COMMA");
-    strcpy(errtype[18],"LACK RETURN VALUE");
-    strcpy(errtype[19],"LACK COLON");
-    strcpy(errtype[20],"CANNOT DIVIDE ZERO");
-    strcpy(errtype[21],"LACK PARAMETERS");
-    strcpy(errtype[23],"WRONG ARRAY LENGTH");
-    strcpy(errtype[24],"VOID HAS RETURN VAL");
-    strcpy(errtype[25],"VOIDFUNCUSE IN FACTOR");
-    strcpy(errtype[26],"LACK MAIN");
-    strcpy(errtype[27],"MAIN HAS RETURN VAL");
-    strcpy(errtype[32],"SIGN BEFORE ZERO");
-    strcpy(errtype[35],"LACK ELSE");
+    int flag=0;
+    for(listi=0;listi<=listpc;listi++)
+    {
+        if(nodelist[listi].node==nod)
+        {
+            strcpy(tntoken,nodelist[listi].id);
+            if(flag==0){
+                strcpy(firstid,tntoken);
+                if(tncheckiftn()>0)//第一个是tn
+                    flag=1;
+                else return;
+            }
+            else{
+                if(tncheckiftn()>0)//又是tn
+                    continue;
+                else{
+                    strcpy(firstid,tntoken);
+                    return;
+                }
+            }
+        }
+    }
 }
-
-void printerror(int type)//打印错误信息
+int leftest(int midt)
 {
-    if(linecount<10)
-        fprintf(ERROR,"\nline %d:\t\t%s",linecount,errtype[type]);
-    else
-        fprintf(ERROR,"\nline %d:\t%s",linecount,errtype[type]);
+    int add=0;
+    for(midj=midpc;midj>=1;midj--)
+    {
+        if(midnode[midt].node==midnode[midj].lnode||
+           midnode[midt].node==midnode[midj].rnode)
+        {
+           if(midnode[midj].queue==0)//父节点不在队列中
+                break;
+        }
+    }
+    //父节点全部进入队列或没有父节点
+    if(midj==0)
+    {
+        //将该节点放入队列
+        //printf("%d\n",midnode[midi].node);
+        nodequeue[++queuepc]=midnode[midt].node;
+        midnode[midt].queue=1;
+        add++;
+        //访问其左子节点
+        for(midk=midpc;midk>=1;midk--)
+        {
+            //printf("abcl %d %d %d\n",midk,midnode[midk].node,midnode[midi].lnode);
+            if(midnode[midk].node==midnode[midt].lnode){
+                add+=leftest(midk);
+                break;
+            }
+        }
+        //访问其右子节点
+        for(midk=midpc;midk>=1;midk--)
+        {
+            //printf("abcr %d %d %d\n",midk,midnode[midk].node,midnode[midi].rnode);
+            if(midnode[midk].node==midnode[midt].rnode){
+                add+=leftest(midk);
+                break;
+            }
+        }
+    }
+    printf("add %d midt %d\n",add,midt);
+    return add;
 }
+void optimize()
+{
+    int inqueue=0;
+    while(inqueue!=midpc){
+        for(midi=midpc;midi>=1;midi--)
+        {
+            //取其中一个未进队的节点x
+            if(midnode[midi].queue==0)
+            {
+               inqueue+=leftest(midi);
+            }
+        }
+    }
+    //逆序输出子节点的赋值语句
+    for(listi=0;listi<=listpc;listi++)
+    {
+        for(midi=midpc;midi>=1;midi--)
+        {
+            if(midnode[midi].node==nodelist[listi].node)
+                break;
+        }
+        if(midi==0)//是子节点
+        {
+            for(listj=listi+1;listj<=listpc;listj++)
+            {
+                if(nodelist[listi].node==nodelist[listj].node){
+                    strcpy(newinter[++newpc].inter0,"assign");
+                    strcpy(newinter[newpc].inter1,nodelist[listi].id);
+                    strcpy(newinter[newpc].inter3,nodelist[listj].id);
+                }
+            }
+        }
+    }
+    //逆序输出中间节点队列
+    for(queuei=queuepc;queuei>=1;queuei--)
+    {
+        for(midi=midpc;midi>=1;midi--)
+        {
+            if(nodequeue[queuei]==midnode[midi].node)
+            {
+                strcpy(newinter[++newpc].inter0,midnode[midi].op);
 
+                getfirstid(midnode[midi].lnode);
+                strcpy(newinter[newpc].inter1,firstid);
+
+                if(midnode[midi].rnode==0)
+                    strcpy(newinter[newpc].inter2,"-");
+                else{
+                    getfirstid(midnode[midi].rnode);
+                    strcpy(newinter[newpc].inter2,firstid);
+                }
+
+                getfirstid(midnode[midi].node);
+                strcpy(newinter[newpc].inter3,firstid);
+                for(listj=listi+1;listj<=listpc;listj++){
+                    strcpy(tntoken,nodelist[listj].id);
+                    if(nodelist[listi].node==nodelist[listj].node&&tncheckiftn()==0){
+                        strcpy(newinter[++newpc].inter0,"assign");
+                        strcpy(newinter[newpc].inter1,firstid);
+                        strcpy(newinter[newpc].inter3,nodelist[listj].id);
+                    }
+                }
+                break;
+            }
+        }
+    }
+}
+void partition()
+{
+    int tempnode, templnode, temprnode;
+    int no=0;
+    for(interi=1;interi<=interpc;interi++)
+    {
+        //赋值语句a=b;
+        if(strcmp(intercode[interi].inter0,"assign")==0)
+        {
+            //先判断赋值变量b的变量名是否在节点表中
+            for(listi=0;listi<=listpc;listi++)
+            {
+                if(strcmp(intercode[interi].inter1,nodelist[listi].id)==0){
+                    tempnode=nodelist[listi].node;
+                    break;
+                }
+            }
+            if(listi==listpc+1){//不在表中
+                strcpy(nodelist[++listpc].id,intercode[interi].inter1);
+                nodelist[listpc].node=++no;
+                tempnode=no;
+            }
+            if(strcmp(intercode[interi].inter2,"-")==0)
+            {
+                //找中间节点，其运算符为op，左节点号为tempnode
+                for(midi=0;midi<=midpc;midi++)
+                {
+                    if(strcmp(intercode[interi].inter0,midnode[midi].op)==0&&
+                       midnode[midi].lnode==tempnode)
+                    {
+                        tempnode=midnode[midi].node;
+                        break;
+                    }
+                }
+                if(midi==midpc+1){//不在表中
+                    strcpy(midnode[++midpc].op,"assign");
+                    midnode[midpc].lnode=tempnode;
+                    midnode[midpc].node=++no;
+                    tempnode=no;
+                }
+            }
+            //再判断被赋值变量a的变量名是否在节点表中
+            for(listi=0;listi<=listpc;listi++)
+            {
+                if(strcmp(intercode[interi].inter3,nodelist[listi].id)==0){
+                    if(nodelist[listi].node!=tempnode)
+                        nodelist[listi].node=tempnode;
+                    break;
+                }
+            }
+            if(listi==listpc+1){//不在表中
+                strcpy(nodelist[++listpc].id,intercode[interi].inter3);
+                nodelist[listpc].node=tempnode;
+            }
+        }
+        //四则运算z=x+y;
+        else if(strcmp(intercode[interi].inter0,"+")==0||
+                strcmp(intercode[interi].inter0,"-")==0||
+                strcmp(intercode[interi].inter0,"*")==0||
+                strcmp(intercode[interi].inter0,"/")==0||
+                strcmp(intercode[interi].inter0,"arrget")==0)
+        {
+            //判断操作数x的变量名是否在节点表中
+            for(listi=0;listi<=listpc;listi++)
+            {
+                if(strcmp(intercode[interi].inter1,nodelist[listi].id)==0){
+                    templnode=nodelist[listi].node;
+                    break;
+                }
+            }
+            if(listi==listpc+1){//不在表中
+                strcpy(nodelist[++listpc].id,intercode[interi].inter1);
+                nodelist[listpc].node=++no;
+                templnode=no;
+            }
+            //判断操作数y的变量名是否在节点表中
+            for(listi=0;listi<=listpc;listi++)
+            {
+                if(strcmp(intercode[interi].inter2,nodelist[listi].id)==0){
+                    temprnode=nodelist[listi].node;
+                    break;
+                }
+            }
+            if(listi==listpc+1){//不在表中
+                strcpy(nodelist[++listpc].id,intercode[interi].inter2);
+                nodelist[listpc].node=++no;
+                temprnode=no;
+            }
+            //找中间节点，其运算符为op，左节点号为templnode,右节点号为temprnode
+            for(midi=0;midi<=midpc;midi++)
+            {
+                if(strcmp(intercode[interi].inter0,midnode[midi].op)==0&&
+                   midnode[midi].lnode==templnode&&midnode[midi].rnode==temprnode)
+                {
+                    tempnode=midnode[midi].node;
+                    break;
+                }
+            }
+            if(midi==midpc+1){//不在表中
+                strcpy(midnode[++midpc].op,intercode[interi].inter0);
+                midnode[midpc].lnode=templnode;
+                midnode[midpc].rnode=temprnode;
+                midnode[midpc].node=++no;
+                tempnode=no;
+            }
+            //判断结果变量z的变量名是否在节点表中
+            for(listi=0;listi<=listpc;listi++)
+            {
+                if(strcmp(intercode[interi].inter3,nodelist[listi].id)==0){
+                    nodelist[listi].node=tempnode;
+                    break;
+                }
+            }
+            if(listi==listpc+1){//不在表中
+                strcpy(nodelist[++listpc].id,intercode[interi].inter3);
+                nodelist[listpc].node=tempnode;
+            }
+        }
+        else{
+            if(listpc!=0){
+                for(listi=1;listi<=listpc;listi++)
+                    printf("%s\t%d\n",nodelist[listi].id,nodelist[listi].node);
+                for(midi=1;midi<=midpc;midi++)
+                    printf("%s\t%d %d %d\n",midnode[midi].op,midnode[midi].node,
+                        midnode[midi].lnode,midnode[midi].rnode);
+                optimize();
+            }
+            no=0;
+            listpc=0;
+            strcpy(newinter[++newpc].inter0,intercode[interi].inter0);
+            strcpy(newinter[newpc].inter1,intercode[interi].inter1);
+            strcpy(newinter[newpc].inter2,intercode[interi].inter2);
+            strcpy(newinter[newpc].inter3,intercode[interi].inter3);
+        }
+    }
+    if(listpc!=0){
+        for(listi=1;listi<=listpc;listi++)
+            printf("%s\t%d\n",nodelist[listi].id,nodelist[listi].node);
+        for(midi=1;midi<=midpc;midi++)
+            printf("%s\t%d %d %d\n",midnode[midi].op,midnode[midi].node,
+                midnode[midi].lnode,midnode[midi].rnode);
+        optimize();
+    }
+}
 
 /*语法分析*/
 /*＜常量说明＞ ::=  const＜常量定义＞;{ const＜常量定义＞;}*/
@@ -2918,12 +3198,55 @@ int tncheckiftn()
     return num;
 }
 
+void saveerror()//保存错误信息
+{
+    strcpy(errtype[0],"FILE NOT EXIST");
+    strcpy(errtype[1],"ILLEGAL SYM");
+    strcpy(errtype[2],"UNDEFINED IDENT");
+    strcpy(errtype[3],"DUPLICATE DEFINE");
+    strcpy(errtype[4],"WRONG ASSIGN TYPE");
+    strcpy(errtype[5],"WRONG PARA NUMBER");
+    strcpy(errtype[6],"WRONG PARA TYPE");
+    strcpy(errtype[7],"LACK SINGLE QUOTES");
+    strcpy(errtype[8],"LACK DOUBLE QUOTES");
+    strcpy(errtype[9],"LACK LEFT PARENT");
+    strcpy(errtype[10],"LACK RIGHT PARENT");
+    strcpy(errtype[11],"LACK LEFT BRACKET");
+    strcpy(errtype[12],"LACK RIGHT BRACKET");
+    strcpy(errtype[13],"LACK LEFT BRACE");
+    strcpy(errtype[14],"LACK RIGHT BRACE");
+    strcpy(errtype[15],"LACK SEMICOLON");
+    strcpy(errtype[16],"LACK EQUALMARK");
+    strcpy(errtype[17],"LACK COMMA");
+    strcpy(errtype[18],"LACK RETURN VALUE");
+    strcpy(errtype[19],"LACK COLON");
+    strcpy(errtype[20],"CANNOT DIVIDE ZERO");
+    strcpy(errtype[21],"LACK PARAMETERS");
+    strcpy(errtype[23],"WRONG ARRAY LENGTH");
+    strcpy(errtype[24],"VOID HAS RETURN VAL");
+    strcpy(errtype[25],"VOIDFUNCUSE IN FACTOR");
+    strcpy(errtype[26],"LACK MAIN");
+    strcpy(errtype[27],"MAIN HAS RETURN VAL");
+    strcpy(errtype[32],"SIGN BEFORE ZERO");
+    strcpy(errtype[35],"LACK ELSE");
+}
+
+void printerror(int type)//打印错误信息
+{
+    if(linecount<10)
+        fprintf(ERROR,"\nline %d:\t\t%s",linecount,errtype[type]);
+    else
+        fprintf(ERROR,"\nline %d:\t%s",linecount,errtype[type]);
+}
+
+
 int main()
 {
     char strline[MAXIDENTLEN];
     IN = fopen("15061091_test.txt","r");
     OUT = fopen("15061091_result.txt","w");
     INTER = fopen("C:\\Users\\Administrator\\Desktop\\inter.txt","w");
+    NEWINTER = fopen("C:\\Users\\Administrator\\Desktop\\newinter.txt","w");
     ASSEM = fopen("C:\\Users\\Administrator\\Desktop\\assem.txt","w");
     ERROR = fopen("C:\\Users\\Administrator\\Desktop\\error.txt","w");
     /*C:\\Users\\Administrator\\Desktop\\*/
@@ -2983,7 +3306,14 @@ int main()
                 intercode[interi].inter0,intercode[interi].inter1,
                 intercode[interi].inter2,intercode[interi].inter3);
         }
-        inter2assem();
+        //inter2assem();
+        partition();
+        for(newi=1;newi<=newpc;newi++)
+        {
+            fprintf(NEWINTER,"%s\t%s\t%s\t%s\n",
+                newinter[newi].inter0,newinter[newi].inter1,
+                newinter[newi].inter2,newinter[newi].inter3);
+        }
     }
     return 0;
 }
