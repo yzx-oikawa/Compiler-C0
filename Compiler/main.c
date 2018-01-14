@@ -199,25 +199,28 @@ void getfirstid();//如果有非tn，就输出第一个，如果没有就输出�
 
 void getfirstid(int nod)
 {
-    int flag=0;
-    for(listi=0;listi<=listpc;listi++)
+    int flag=0,i;
+    for(i=0;i<=listpc;i++)
     {
-        if(nodelist[listi].node==nod)
+        if(nodelist[i].node==nod)
         {
-            strcpy(tntoken,nodelist[listi].id);
+            strcpy(tntoken,nodelist[i].id);
             if(flag==0){
                 strcpy(firstid,tntoken);
                 if(tncheckiftn()>0)//第一个是tn
                     flag=1;
-                else return;
+                else if(tncheckiflog()>=0)//第一个是标识符
+                    return;
+                else flag=1;
             }
             else{
                 if(tncheckiftn()>0)//又是tn
                     continue;
-                else{
+                else if(tncheckiflog()>=0){//遇到标识符
                     strcpy(firstid,tntoken);
                     return;
                 }
+                else strcpy(firstid,tntoken);
             }
         }
     }
@@ -245,7 +248,6 @@ int leftest(int midt)
         //访问其左子节点
         for(midk=midpc;midk>=1;midk--)
         {
-            //printf("abcl %d %d %d\n",midk,midnode[midk].node,midnode[midi].lnode);
             if(midnode[midk].node==midnode[midt].lnode){
                 add+=leftest(midk);
                 break;
@@ -254,7 +256,6 @@ int leftest(int midt)
         //访问其右子节点
         for(midk=midpc;midk>=1;midk--)
         {
-            //printf("abcr %d %d %d\n",midk,midnode[midk].node,midnode[midi].rnode);
             if(midnode[midk].node==midnode[midt].rnode){
                 add+=leftest(midk);
                 break;
@@ -264,9 +265,10 @@ int leftest(int midt)
     printf("add %d midt %d\n",add,midt);
     return add;
 }
-void optimize()
+void optimize(int no)
 {
     int inqueue=0;
+    int nod;
     while(inqueue!=midpc){
         for(midi=midpc;midi>=1;midi--)
         {
@@ -278,21 +280,23 @@ void optimize()
         }
     }
     //逆序输出子节点的赋值语句
-    for(listi=0;listi<=listpc;listi++)
+    for(nod=1;nod<=no;nod++)
     {
         for(midi=midpc;midi>=1;midi--)
         {
-            if(midnode[midi].node==nodelist[listi].node)
+            if(midnode[midi].node==nod)
                 break;
         }
+        printf("leaf %d %d\n",midi,nod);
         if(midi==0)//是子节点
         {
-            for(listj=listi+1;listj<=listpc;listj++)
+            getfirstid(nod);
+            for(listj=1;listj<=listpc;listj++)
             {
-                if(nodelist[listi].node==nodelist[listj].node){
+                if(nod==nodelist[listj].node&&strcmp(firstid,nodelist[listj].id)!=0){
                     strcpy(newinter[++newpc].inter0,"assign");
-                    strcpy(newinter[newpc].inter1,nodelist[listi].id);
-                    strcpy(newinter[newpc].inter3,nodelist[listj].id);
+                    strcpy(newinter[newpc].inter1,nodelist[listj].id);
+                    strcpy(newinter[newpc].inter3,firstid);
                 }
             }
         }
@@ -318,9 +322,10 @@ void optimize()
 
                 getfirstid(midnode[midi].node);
                 strcpy(newinter[newpc].inter3,firstid);
-                for(listj=listi+1;listj<=listpc;listj++){
+                for(listj=1;listj<=listpc;listj++){
                     strcpy(tntoken,nodelist[listj].id);
-                    if(nodelist[listi].node==nodelist[listj].node&&tncheckiftn()==0){
+                    if(nodelist[listi].node==nodelist[listj].node&&tncheckiftn()==0
+                       &&strcmp(firstid,nodelist[listj].id)!=0){
                         strcpy(newinter[++newpc].inter0,"assign");
                         strcpy(newinter[newpc].inter1,firstid);
                         strcpy(newinter[newpc].inter3,nodelist[listj].id);
@@ -456,10 +461,15 @@ void partition()
                 for(midi=1;midi<=midpc;midi++)
                     printf("%s\t%d %d %d\n",midnode[midi].op,midnode[midi].node,
                         midnode[midi].lnode,midnode[midi].rnode);
-                optimize();
+                optimize(no);
             }
             no=0;
             listpc=0;
+            midpc=0;
+            queuepc=0;
+            memset(nodelist, 0, sizeof(nodelist));
+            memset(midnode, 0, sizeof(midnode));
+            memset(nodequeue, 0, sizeof(nodequeue));
             strcpy(newinter[++newpc].inter0,intercode[interi].inter0);
             strcpy(newinter[newpc].inter1,intercode[interi].inter1);
             strcpy(newinter[newpc].inter2,intercode[interi].inter2);
@@ -472,7 +482,7 @@ void partition()
         for(midi=1;midi<=midpc;midi++)
             printf("%s\t%d %d %d\n",midnode[midi].op,midnode[midi].node,
                 midnode[midi].lnode,midnode[midi].rnode);
-        optimize();
+        optimize(no);
     }
 }
 
