@@ -1,0 +1,2 @@
+
+line 86:	WRONG ASSIGN TYPE t10

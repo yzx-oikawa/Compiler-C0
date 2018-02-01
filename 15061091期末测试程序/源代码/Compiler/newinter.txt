@@ -1,0 +1,166 @@
+const	int	one	1
+const	int	two	2
+const	char	ch	c
+const	char	st	s
+var	int	s	
+var	int	sum	
+func	void	getsum	
+para	int	n	
+>	n	100	
+bz	Label1		
+goto	Label2		
+Label1	:		
+<=	s	n	
+bz	Label3		
++	sum	s	t1
+assign	t1		sum
++	s	1	t2
+assign	t2		s
+push	n		
+call	getsum		
+goto	Label4		
+Label3	:		
+print		sum	
+Label4	:		
+Label2	:		
+ret	none		
+ret	none		
+func	int	reverse	
+para	int	n	
+var	int	j	
+var	int	na	100
+assign	0		j
+>	n	100	
+bz	Label5		
+assign	1	-	t1
+ret	t1		
+goto	Label6		
+Label5	:		
+Label6	:		
+Label7	:		
+<	j	n	
+bz	Label8		
+-	n	1	t2
+-	t2	j	t3
++	j	1	t4
+arrass	t4	t3	na
++	j	1	t5
+assign	t5		j
+goto	Label7		
+Label8	:		
+print	SUM: 		
+arrget	na	0	t6
+print		t6	
+assign	1		j
+Label9	:		
+<	j	n	
+bz	Label10		
+print	+		
+arrget	na	j	t7
+print		t7	
++	j	1	t8
+assign	t8		j
+goto	Label9		
+Label10	:		
+print	=		
+/	n	2	t9
+*	t9	2	t10
+==	t10	n	
+bz	Label11		
+ret	1		
+goto	Label12		
+Label11	:		
+ret	0		
+Label12	:		
+func	void	main	
+var	int	x	
+var	int	y	
+var	int	n	
+var	int	m	
+var	int	i	
+var	int	a	
+var	char	c	
+var	char	r	
+assign	1		s
+assign	0		sum
++	one	s	t1
+print		t1	
++	ch	1	t2
+print		t2	
+scan	x		
+scan	y		
+scan	c		
+assign	m		x
+assign	2		a
+assign	1		i
+<	x	y	
+bz	Label13		
+assign	m		y
+goto	Label14		
+Label13	:		
+Label14	:		
+Label15	:		
+<=	i	y	
+bz	Label16		
+/	x	i	t3
+*	t3	i	t4
+==	t4	x	
+bz	Label17		
+/	y	i	t5
+*	t5	i	t6
+==	t6	y	
+bz	Label18		
+assign	a		i
+goto	Label19		
+Label18	:		
+Label19	:		
+goto	Label20		
+Label17	:		
+Label20	:		
++	i	1	t7
+assign	t7		i
+goto	Label15		
+Label16	:		
+*	x	y	t8
+assign	t8		m
+/	t8	a	m
+==	c	103	
+bz	Label21		
+print	GCD: 		
+print		a	
+goto	Labeleoc1		
+Label21	:		
+==	c	108	
+bz	Label22		
+print	LCM: 		
+print		m	
+goto	Labeleoc1		
+Label22	:		
+print	ERROR		
+Labeleoc1	:		
+scan	n		
+push	n		
+call	reverse		
+assign	ret		t10
+assign	t10		r
+push	n		
+call	getsum		
+==	r	0	
+bz	Label23		
+print	n is ODD		
+goto	Labeleoc2		
+Label23	:		
+==	r	1	
+bz	Label24		
+print	n is EVEN		
+goto	Labeleoc2		
+Label24	:		
+print	ERROR		
+Labeleoc2	:		
+assign	1	-	t11
+print		t11	
+-	x	y	t12
+assign	t12	-	t13
+print		t13	
+assign	m	-	t14
+print		t14	
